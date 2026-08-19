@@ -39,11 +39,10 @@
   a:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
   .wrap{max-width:760px;margin:0 auto;padding:0 24px}
 
-  /* Hero: a working frame. The brackets hold a real delivery ratio and step
-     through the formats; inside, today's sun path for the visitor's timezone
-     city is computed and drawn live, in the app's own grammar: orange for
-     now, yellow for the previewed time. Without scripts it is the static
-     2.39 frame. */
+  /* Hero: the thread. One continuous line is the whole reel: the sun's real
+     arc, the response curve, the meter's dial, the blocking stage's ground.
+     Everything else emanates from the line and returns to it. Without
+     scripts it is the static 2.39 frame. */
   .frame .inner{
     position:relative;
     height:clamp(220px,41.84vw,360px); /* 2.39:1 until the height cap */
@@ -60,7 +59,7 @@
   .frame .tr{top:0;right:0}
   .frame .bl{bottom:0;left:0}
   .frame .br{bottom:0;right:0}
-  #sunpath,#blocking,#look,#meter{position:absolute;inset:0;width:100%;height:100%}
+  #reel{position:absolute;inset:0;width:100%;height:100%}
   .wordmark{display:block;width:min(64vw,420px);height:auto;position:relative;z-index:1}
   main{padding:6rem 0 4rem}
   section.row{
@@ -141,32 +140,19 @@
     <svg class="bracket tr" viewBox="0 0 30 30"><path d="M 18 2 L 24 2 A 4 4 0 0 1 28 6 L 28 12"/></svg>
     <svg class="bracket bl" viewBox="0 0 30 30"><path d="M 12 28 L 6 28 A 4 4 0 0 1 2 24 L 2 18"/></svg>
     <svg class="bracket br" viewBox="0 0 30 30"><path d="M 18 28 L 24 28 A 4 4 0 0 0 28 24 L 28 18"/></svg>
-    <svg id="sunpath">
-      <path id="arcline" fill="none" stroke="#FF9F0A" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="4 5"/>
-      <g id="ticks" stroke="#FF9F0A" stroke-opacity=".5" stroke-width="1"></g>
-      <circle id="sunnow" r="4.5" fill="none" stroke="#FF9F0A" stroke-width="1.2" visibility="hidden"/>
-      <circle id="sunprev" r="3.5" fill="#FFCC00" visibility="hidden"/>
-    </svg>
-    <svg id="blocking" visibility="hidden">
+    <svg id="reel">
       <g id="bgrid" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1"></g>
       <path id="bbox" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="1.1" visibility="hidden"/>
       <ellipse id="borbit" fill="none" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="1" stroke-dasharray="3 4" visibility="hidden"/>
       <circle id="bdot" r="2.6" fill="#FFFFFF" fill-opacity=".9" visibility="hidden"/>
-      <circle id="bpulse" fill="none" stroke="#FFCC00" stroke-width="1.4" visibility="hidden"/>
       <g id="bfigs" stroke="#64D2FF" stroke-opacity=".9" stroke-width="1.2" fill="none"></g>
       <g id="bwedge" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1"></g>
-    </svg>
-    <svg id="look" visibility="hidden">
-      <g id="laxis" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="1"></g>
-      <path id="lw" fill="none" stroke="#FFFFFF" stroke-opacity=".75" stroke-width="1.4" visibility="hidden"/>
-      <path id="lr" fill="none" stroke="#FF453A" stroke-opacity=".8" stroke-width="1.4" visibility="hidden"/>
-      <path id="lg" fill="none" stroke="#30D158" stroke-opacity=".8" stroke-width="1.4" visibility="hidden"/>
-      <path id="lb" fill="none" stroke="#0A84FF" stroke-opacity=".8" stroke-width="1.4" visibility="hidden"/>
-    </svg>
-    <svg id="meter" visibility="hidden">
-      <g id="mdial" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="1"></g>
-      <g id="mramp"></g>
-      <line id="mmark" stroke="#FFFFFF" stroke-opacity=".9" stroke-width="1.5" visibility="hidden"/>
+      <path id="lr" fill="none" stroke="#FF453A" stroke-opacity=".75" stroke-width="1.3" visibility="hidden"/>
+      <path id="lb" fill="none" stroke="#0A84FF" stroke-opacity=".75" stroke-width="1.3" visibility="hidden"/>
+      <path id="theline" fill="none" stroke="#FF9F0A" stroke-opacity=".6" stroke-width="1.3" stroke-dasharray="4 5"/>
+      <g id="lineticks" stroke="#FF9F0A" stroke-opacity=".55" stroke-width="1"></g>
+      <circle id="sunnow" r="4.5" fill="none" stroke="#FF9F0A" stroke-width="1.2" visibility="hidden"/>
+      <circle id="sunprev" r="3.5" fill="#FFCC00" visibility="hidden"/>
       <line id="mneedle" stroke="#FFCC00" stroke-width="2" visibility="hidden"/>
       <g id="mret" fill="none" stroke="#FFCC00" stroke-width="1.4" visibility="hidden">
         <circle id="mretc" r="14"/>
@@ -331,13 +317,12 @@
 </script>
 
 <script>
-  /* The working frame. The brackets step through real delivery ratios, fitted
-     the way the app fits a sensor's frame to the screen, and today's sun path
-     is computed here and drawn in the app's grammar: dashed orange arc with
-     hourly ticks, orange open circle for now, yellow filled dot for the
-     previewed time sweeping the day. The place is the visitor's timezone's
-     reference city, named in the readout; no permission prompt, no lookup
-     service. Nothing is canned. */
+  /* v2: the thread. One continuous line is the whole reel: it is the sun's
+     arc, unbends into the response curve, flattens into the meter's dial,
+     drops to the ground as the blocking stage, and lifts into tomorrow's
+     arc as the frame takes its next ratio. Everything else emanates from
+     the line and returns to it before each change. Nothing is canned: the
+     arc is today's real sun for the visitor's timezone city. */
   (function(){
     var inner = document.querySelector('.frame .inner');
     var vf = document.getElementById('vframe');
@@ -439,42 +424,45 @@
       return { rise: rise, set: set, samples: samples, hours: hours, maxE: maxE, day: m0 };
     }
 
-    var svg = document.getElementById('sunpath');
-    var arc = document.getElementById('arcline');
-    var ticks = document.getElementById('ticks');
+    var reel = document.getElementById('reel');
+    var lineEl = document.getElementById('theline');
+    var ticksEl = document.getElementById('lineticks');
     var nowC = document.getElementById('sunnow');
     var prevC = document.getElementById('sunprev');
-    var bsvg = document.getElementById('blocking');
-    var bgrid = document.getElementById('bgrid');
-    var bbox = document.getElementById('bbox');
-    var borbit = document.getElementById('borbit');
-    var bdot = document.getElementById('bdot');
-    var bpulse = document.getElementById('bpulse');
-    var bfigs = document.getElementById('bfigs');
-    var bwedge = document.getElementById('bwedge');
-    var lsvg = document.getElementById('look');
-    var laxis = document.getElementById('laxis');
-    var lw = document.getElementById('lw');
     var lr = document.getElementById('lr');
-    var lg = document.getElementById('lg');
     var lb = document.getElementById('lb');
-    var msvg = document.getElementById('meter');
-    var mramp = document.getElementById('mramp');
-    var mmark = document.getElementById('mmark');
-    var mdial = document.getElementById('mdial');
     var mneedle = document.getElementById('mneedle');
     var mret = document.getElementById('mret');
     var mretc = document.getElementById('mretc');
     var mretd = document.getElementById('mretd');
+    var bgrid = document.getElementById('bgrid');
+    var bbox = document.getElementById('bbox');
+    var borbit = document.getElementById('borbit');
+    var bdot = document.getElementById('bdot');
+    var bfigs = document.getElementById('bfigs');
+    var bwedge = document.getElementById('bwedge');
     var wm = document.querySelector('.wordmark');
 
     var RATIOS = [2.39, 1.85, 2.76, 16/9, 2];
-    var MORPH = 700;
-
     var model = dayModel();
-    var t0 = null, W = 0, H = 0;
-    var lastMin = -1, lastW = -1, lastH = -1, lastScene = -1;
-    var bgridLast = '', bfigsLast = '', bwedgeLast = '';
+    var t0 = null, W = 0, H = 0, lastMin = -1;
+    var ticksLast = '', bgridLast = '', bfigsLast = '', bwedgeLast = '';
+
+    /* The reel: holds and morphs. One ratio per cycle, re-framed during
+       the rebirth at the end. */
+    var SEG = [
+      { state: 0, len: 4000 },
+      { from: 0, to: 1, len: 900 },
+      { state: 1, len: 5000 },
+      { from: 1, to: 2, len: 900 },
+      { state: 2, len: 5000 },
+      { from: 2, to: 3, len: 900 },
+      { state: 3, len: 6000 },
+      { from: 3, to: 0, len: 1100 }
+    ];
+    var TOTAL = 0;
+    SEG.forEach(function(s){ TOTAL += s.len; });
+    var N = 64;
 
     function fit(r){
       var mw = inner.clientWidth, mh = inner.clientHeight - 32;
@@ -482,320 +470,297 @@
       return [w, w / r];
     }
     function ease(u){ return u < 0.5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3) / 2; }
+    function clamp01(u){ return Math.max(0, Math.min(1, u)); }
+    function grow(st, at, over){ return clamp01((st - at) / over); }
+    /* Whatever emanates from the line returns to it before each morph. */
+    function outEnv(st, len){ return clamp01((len - st) / 350); }
 
-    /* Geometry: x maps rise-to-set across the frame, y is true elevation
-       against today's maximum. */
-    function xOf(t, w){ var p = 0.07 * w; return p + (t - model.rise) / (model.set - model.rise) * (w - 2 * p); }
-    function yOf(e, h){ return 0.58 * h - (e / model.maxE) * (0.58 - 0.16) * h; }
-
-    function drawDay(w, h){
-      if (!model.samples.length){ arc.removeAttribute('d'); return; }
-      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-      var d = '';
-      model.samples.forEach(function(s, i){
-        d += (i ? 'L' : 'M') + xOf(s[0], w).toFixed(1) + ' ' + yOf(s[1], h).toFixed(1);
-      });
-      arc.setAttribute('d', d);
-      var tk = '';
-      model.hours.forEach(function(hp){
-        var x = xOf(hp[0], w).toFixed(1), y = yOf(hp[1], h);
-        tk += '<line x1="' + x + '" y1="' + (y - 3).toFixed(1) + '" x2="' + x + '" y2="' + (y + 3).toFixed(1) + '"/>';
-      });
-      ticks.innerHTML = tk;
-    }
-
-    function drawLive(w, h, nowMs, pt){
-      var pos = sunPos(new Date(nowMs));
-      var nowUp = model.samples.length && nowMs > model.rise && nowMs < model.set;
-      if (nowUp){
-        nowC.setAttribute('cx', xOf(nowMs, w).toFixed(1));
-        nowC.setAttribute('cy', yOf(Math.max(0, pos.elev), h).toFixed(1));
-      }
-      var show = nowUp;
-      if (pt !== null && model.samples.length){
-        prevC.setAttribute('cx', xOf(pt, w).toFixed(1));
-        prevC.setAttribute('cy', yOf(Math.max(0, sunPos(new Date(pt)).elev), h).toFixed(1));
-        prevC.setAttribute('visibility', 'visible');
-        /* Where previewed and now coincide, only previewed is drawn. */
-        if (nowUp && Math.abs(pt - nowMs) < 12e5) show = false;
-      } else prevC.setAttribute('visibility', 'hidden');
-      nowC.setAttribute('visibility', show ? 'visible' : 'hidden');
-    }
-
-    /* Scene two: the blocking, choreographed from the app's own AR flow.
-       The floor maps, the scan box takes its three orbits (chest, eye,
-       knee), two stand-ins place on yellow taps, and the wordmark's A
-       enacts its own meaning: legs extend as the field of view, and the
-       subject line runs through the figures. */
-    function sceneB(st, w, h){
-      bsvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-      var vpx = 0.5 * w, vpy = 0.40 * h, yB = 0.95 * h;
-      function gy(f){ return vpy + (yB - vpy) * Math.pow(f, 1.8); }
-      function gx(xb, f){ return vpx + (xb - vpx) * Math.pow(f, 1.8); }
-
-      var g = Math.max(0, Math.min(1, (st - 150) / 750));
-      var NR = 6, NC = 9, out = '';
-      var rows = Math.ceil(g * NR), cols = Math.ceil(g * NC), f0 = 1 / NR;
-      for (var i = 1; i <= rows; i++){
-        var f = i / NR, y = gy(f);
-        out += '<line x1="' + gx(0.02 * w, f).toFixed(1) + '" y1="' + y.toFixed(1) +
-               '" x2="' + gx(0.98 * w, f).toFixed(1) + '" y2="' + y.toFixed(1) + '"/>';
-      }
-      for (var j = 0; j < cols; j++){
-        var xb = 0.02 * w + j * (0.96 * w) / (NC - 1);
-        out += '<line x1="' + gx(xb, f0).toFixed(1) + '" y1="' + gy(f0).toFixed(1) +
-               '" x2="' + xb.toFixed(1) + '" y2="' + yB.toFixed(1) + '"/>';
-      }
-      if (out !== bgridLast){ bgrid.innerHTML = out; bgridLast = out; }
-
-      var bx = 0.74 * w, bw = Math.max(26, 0.085 * w), bh = Math.max(34, 0.26 * h), by = 0.88 * h;
-      if (st > 950){
-        var c = [[bx - bw / 2, by], [bx + bw / 2, by], [bx + bw / 2, by - bh], [bx - bw / 2, by - bh]];
-        var k = 0.13, d = '';
-        var b = c.map(function(p){ return [p[0] + (vpx - p[0]) * k, p[1] + (vpy - p[1]) * k]; });
-        for (var e = 0; e < 4; e++){
-          var n = (e + 1) % 4;
-          d += 'M' + c[e][0].toFixed(1) + ' ' + c[e][1].toFixed(1) + 'L' + c[n][0].toFixed(1) + ' ' + c[n][1].toFixed(1) +
-               'M' + b[e][0].toFixed(1) + ' ' + b[e][1].toFixed(1) + 'L' + b[n][0].toFixed(1) + ' ' + b[n][1].toFixed(1) +
-               'M' + c[e][0].toFixed(1) + ' ' + c[e][1].toFixed(1) + 'L' + b[e][0].toFixed(1) + ' ' + b[e][1].toFixed(1);
-        }
-        bbox.setAttribute('d', d);
-        bbox.setAttribute('visibility', 'visible');
-      } else bbox.setAttribute('visibility', 'hidden');
-
-      if (st > 1050 && st < 2950){
-        var ot = st - 1050, pass = Math.min(2, Math.floor(ot / 633));
-        var oy = by - bh * [0.55, 0.8, 0.2][pass], orx = bw * 1.5, ory = orx * 0.3;
-        borbit.setAttribute('cx', bx.toFixed(1)); borbit.setAttribute('cy', oy.toFixed(1));
-        borbit.setAttribute('rx', orx.toFixed(1)); borbit.setAttribute('ry', ory.toFixed(1));
-        var a = (ot % 633) / 633 * 2 * Math.PI;
-        bdot.setAttribute('cx', (bx + orx * Math.cos(a)).toFixed(1));
-        bdot.setAttribute('cy', (oy + ory * Math.sin(a)).toFixed(1));
-        borbit.setAttribute('visibility', 'visible'); bdot.setAttribute('visibility', 'visible');
-      } else { borbit.setAttribute('visibility', 'hidden'); bdot.setAttribute('visibility', 'hidden'); }
-
-      var wr = wm.getBoundingClientRect(), vr = vf.getBoundingClientRect();
-      var sx = wr.width / 76, sy2 = wr.height / 20, wx = wr.left - vr.left, wy = wr.top - vr.top;
-      var apex = [wx + 7 * sx, wy + 6.2 * sy2];
-      var ftL = [wx + 2 * sx, wy + 16 * sy2], ftR = [wx + 12 * sx, wy + 16 * sy2];
-      var ys = 0.9 * h;
-      function onLeg(ft){ var k2 = (ys - apex[1]) / (ft[1] - apex[1]); return apex[0] + (ft[0] - apex[0]) * k2; }
-      var xL = onLeg(ftL), xR = onLeg(ftR);
-
-      var fx = [xL + (xR - xL) * 0.3, xL + (xR - xL) * 0.72];
-      var born = [3325, 3775], fo = '', fh = Math.max(18, 0.13 * h);
-      for (var q = 0; q < 2; q++){
-        if (st > born[q]){
-          fo += '<ellipse cx="' + fx[q].toFixed(1) + '" cy="' + ys.toFixed(1) + '" rx="8" ry="2.6"/>' +
-                '<line x1="' + fx[q].toFixed(1) + '" y1="' + ys.toFixed(1) + '" x2="' + fx[q].toFixed(1) + '" y2="' + (ys - fh).toFixed(1) + '"/>' +
-                '<circle cx="' + fx[q].toFixed(1) + '" cy="' + (ys - fh - 4).toFixed(1) + '" r="3"/>';
-        }
-      }
-      if (fo !== bfigsLast){ bfigs.innerHTML = fo; bfigsLast = fo; }
-
-      var pw = -1, pu = 0;
-      if (st > 3050 && st < 3325){ pw = 0; pu = (st - 3050) / 275; }
-      if (st > 3500 && st < 3775){ pw = 1; pu = (st - 3500) / 275; }
-      if (pw >= 0){
-        bpulse.setAttribute('cx', fx[pw].toFixed(1)); bpulse.setAttribute('cy', ys.toFixed(1));
-        bpulse.setAttribute('r', (3 + 13 * pu).toFixed(1));
-        bpulse.setAttribute('stroke-opacity', (1 - pu).toFixed(2));
-        bpulse.setAttribute('visibility', 'visible');
-      } else bpulse.setAttribute('visibility', 'hidden');
-
-      var wo = '';
-      if (st > 4000){
-        var wg = Math.min(1, (st - 4000) / 450);
-        [[ftL, xL], [ftR, xR]].forEach(function(pair){
-          var x2 = pair[0][0] + (pair[1] - pair[0][0]) * wg;
-          var y2 = pair[0][1] + (ys - pair[0][1]) * wg;
-          wo += '<line x1="' + pair[0][0].toFixed(1) + '" y1="' + pair[0][1].toFixed(1) +
-                '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
-        });
-      }
-      if (st > 4550){
-        var sg = Math.min(1, (st - 4550) / 400);
-        var xm = (xL + xR) / 2, half = (xR - xL) / 2 * 1.08 * sg;
-        wo += '<line x1="' + (xm - half).toFixed(1) + '" y1="' + ys.toFixed(1) +
-              '" x2="' + (xm + half).toFixed(1) + '" y2="' + ys.toFixed(1) + '"/>';
-      }
-      if (wo !== bwedgeLast){ bwedge.innerHTML = wo; bwedgeLast = wo; }
-    }
-
-    /* Scene three: the look. One rippling response curve diverges into
-       its red, green and blue channels, the channels weave, and the line
-       breathes back to neutral before the cut: the RGB curve of the Look
-       sheet, given motion. */
+    /* The line's four shapes. */
     var LBASE = [0.03, 0.14, 0.36, 0.62, 0.84, 0.95];
-    var laxisLast = '';
     function baseY(xn){
       var seg = Math.min(4, Math.floor(xn * 5)), u = xn * 5 - seg;
       var m = (1 - Math.cos(u * Math.PI)) / 2;
       return LBASE[seg] + (LBASE[seg + 1] - LBASE[seg]) * m;
     }
-    function sceneC(st, w, h){
-      lsvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-      var x0 = 0.12 * w, x1 = 0.88 * w, yb = 0.80 * h, yt = 0.20 * h;
-      var ax = '';
-      if (st > 150){
-        ax = '<line x1="' + x0 + '" y1="' + yt + '" x2="' + x0 + '" y2="' + yb + '"/>' +
-             '<line x1="' + x0 + '" y1="' + yb + '" x2="' + x1 + '" y2="' + yb + '"/>';
-        for (var j = 0; j <= 6; j++){
-          var tx = x0 + j * (x1 - x0) / 6, tl = j === 3 ? 7 : 4;
-          ax += '<line x1="' + tx.toFixed(1) + '" y1="' + yb + '" x2="' + tx.toFixed(1) + '" y2="' + (yb + tl) + '"/>';
-        }
+    function sunXY(xn, w, h){
+      var x = 0.07 * w + xn * 0.86 * w, y = 0.5 * h;
+      if (model.samples.length){
+        var tm = model.rise + xn * (model.set - model.rise);
+        var e = Math.max(0, sunPos(new Date(tm)).elev);
+        y = 0.58 * h - (e / model.maxE) * 0.42 * h;
       }
-      if (ax !== laxisLast){ laxis.innerHTML = ax; laxisLast = ax; }
+      return [x, y];
+    }
+    function lookY(xn, h, t, ph){
+      return 0.78 * h - 0.56 * h * baseY(xn)
+        + 0.56 * h * 0.018 * Math.sin(15.7 * xn - 2.2 * t + ph * 0.4) * Math.sin(Math.PI * xn);
+    }
+    function linePts(state, w, h, t){
+      var pts = [];
+      for (var i = 0; i <= N; i++){
+        var xn = i / N;
+        if (state === 0) pts.push(sunXY(xn, w, h));
+        else if (state === 1) pts.push([0.12 * w + xn * 0.76 * w, lookY(xn, h, t, 0)]);
+        else if (state === 2) pts.push([0.30 * w + xn * 0.40 * w, 0.72 * h]);
+        else pts.push([0.06 * w + xn * 0.88 * w, 0.88 * h]);
+      }
+      return pts;
+    }
+    function pathOf(pts){
+      var d = '';
+      for (var i = 0; i < pts.length; i++) d += (i ? 'L' : 'M') + pts[i][0].toFixed(1) + ' ' + pts[i][1].toFixed(1);
+      return d;
+    }
+    /* Stroke per state: the sun's dashed orange closes up into a solid
+       neutral line as it leaves the sky, and reopens at the rebirth. */
+    var COL = [[255, 159, 10], [240, 239, 236], [240, 239, 236], [240, 239, 236]];
+    var OPA = [0.6, 0.75, 0.6, 0.5];
+    var GAP = [5, 0, 0, 0];
+    function mix(a, b, u){ return a + (b - a) * u; }
+    function setStroke(a, b, u){
+      var ca = COL[a], cb = COL[b];
+      lineEl.setAttribute('stroke', 'rgb(' + Math.round(mix(ca[0], cb[0], u)) + ',' +
+        Math.round(mix(ca[1], cb[1], u)) + ',' + Math.round(mix(ca[2], cb[2], u)) + ')');
+      lineEl.setAttribute('stroke-opacity', mix(OPA[a], OPA[b], u).toFixed(2));
+      var g = mix(GAP[a], GAP[b], u);
+      if (g < 0.05) lineEl.removeAttribute('stroke-dasharray');
+      else lineEl.setAttribute('stroke-dasharray', '4 ' + g.toFixed(2));
+    }
+    function setTicks(tk, col){
+      if (tk !== ticksLast){ ticksEl.innerHTML = tk; ticksLast = tk; }
+      ticksEl.setAttribute('stroke', col);
+    }
 
-      var plotH = yb - yt, t = st / 1000;
-      var fx = st < 450 ? 0 : Math.min(1, (st - 450) / 700);
-      /* Divergence envelope: neutral, graded, neutral. */
-      var D = 0;
-      if (st > 1300) D = Math.min(1, (st - 1300) / 900);
-      if (st > 4500) D = Math.max(0, 1 - (st - 4500) / 800);
+    function hideSun(){ nowC.setAttribute('visibility', 'hidden'); prevC.setAttribute('visibility', 'hidden'); }
+    function hideLook(){ lr.setAttribute('visibility', 'hidden'); lb.setAttribute('visibility', 'hidden'); }
+    function hideMeter(){ mret.setAttribute('visibility', 'hidden'); mneedle.setAttribute('visibility', 'hidden'); }
+    function hideBlock(){
+      if (bgridLast !== ''){ bgrid.innerHTML = ''; bgridLast = ''; }
+      if (bfigsLast !== ''){ bfigs.innerHTML = ''; bfigsLast = ''; }
+      if (bwedgeLast !== ''){ bwedge.innerHTML = ''; bwedgeLast = ''; }
+      bbox.setAttribute('visibility', 'hidden');
+      borbit.setAttribute('visibility', 'hidden');
+      bdot.setAttribute('visibility', 'hidden');
+    }
+    function hideAll(){ hideSun(); hideLook(); hideMeter(); hideBlock(); setTicks('', '#FFFFFF'); }
+
+    /* State 0, the sun: hour ticks live on the line, the previewed-time
+       dot sweeps the day, the now circle sits where the sun really is. */
+    function dressSun(st, len, w, h){
+      var nowMs = Date.now(), min = Math.floor(nowMs / 6e4);
+      if (min !== lastMin && nowMs > model.day + 864e5) model = dayModel();
+      lastMin = min;
+      var e = reduce ? 1 : Math.min(grow(st, 0, 300), outEnv(st, len));
+      var tk = '';
+      if (model.samples.length && e > 0){
+        model.hours.forEach(function(hp){
+          var xn = (hp[0] - model.rise) / (model.set - model.rise);
+          var p = sunXY(xn, w, h), l = 3 * e;
+          tk += '<line x1="' + p[0].toFixed(1) + '" y1="' + (p[1] - l).toFixed(1) +
+                '" x2="' + p[0].toFixed(1) + '" y2="' + (p[1] + l).toFixed(1) + '"/>';
+        });
+      }
+      setTicks(tk, '#FF9F0A');
+      var show = false;
+      if (model.samples.length && nowMs > model.rise && nowMs < model.set){
+        var pn = sunXY((nowMs - model.rise) / (model.set - model.rise), w, h);
+        nowC.setAttribute('cx', pn[0].toFixed(1)); nowC.setAttribute('cy', pn[1].toFixed(1));
+        show = true;
+      }
+      if (!reduce && model.samples.length){
+        var u = clamp01((st - 200) / (len - 500));
+        var pp = sunXY(u, w, h);
+        prevC.setAttribute('cx', pp[0].toFixed(1)); prevC.setAttribute('cy', pp[1].toFixed(1));
+        prevC.setAttribute('visibility', 'visible');
+        /* Where previewed and now coincide, only previewed is drawn. */
+        if (show && Math.abs(model.rise + u * (model.set - model.rise) - nowMs) < 12e5) show = false;
+      } else prevC.setAttribute('visibility', 'hidden');
+      nowC.setAttribute('visibility', show ? 'visible' : 'hidden');
+    }
+
+    /* State 1, the look: red and blue channels diverge from the line,
+       weave, and fold back into it. */
+    function dressLook(st, len, w, h, t){
+      var D = Math.min(grow(st, 700, 900), clamp01((4200 - st) / 800));
       D = D * D * (3 - 2 * D);
-      function pathFor(ph, dAmp){
+      if (D <= 0.02){ hideLook(); return; }
+      function chan(sign, ph){
         var d = '';
-        for (var i = 0; i <= 32; i++){
-          var xn = i / 32 * fx;
-          var env = Math.sin(Math.PI * xn);
-          var yy = yb - plotH * baseY(xn)
-            + plotH * 0.018 * Math.sin(15.7 * xn - 2.2 * t + ph * 0.5) * env
-            - plotH * 0.085 * dAmp * Math.sin(6.9 * xn + ph + 0.5 * Math.sin(0.9 * t + ph)) * env;
-          d += (i ? 'L' : 'M') + (x0 + (x1 - x0) * xn).toFixed(1) + ' ' + yy.toFixed(1);
+        for (var i = 0; i <= N; i++){
+          var xn = i / N;
+          var off = D * 0.039 * h * (0.55 + 0.45 * Math.sin(8.2 * xn + ph + 0.5 * Math.sin(0.9 * t + ph))) * Math.sin(Math.PI * xn);
+          d += (i ? 'L' : 'M') + (0.12 * w + xn * 0.76 * w).toFixed(1) + ' ' +
+               (lookY(xn, h, t, ph) + sign * off).toFixed(1);
         }
         return d;
       }
-      if (fx <= 0){
-        lw.setAttribute('visibility', 'hidden');
-        lr.setAttribute('visibility', 'hidden'); lg.setAttribute('visibility', 'hidden'); lb.setAttribute('visibility', 'hidden');
-      } else if (D <= 0.02){
-        lw.setAttribute('d', pathFor(0, 0)); lw.setAttribute('visibility', 'visible');
-        lr.setAttribute('visibility', 'hidden'); lg.setAttribute('visibility', 'hidden'); lb.setAttribute('visibility', 'hidden');
-      } else {
-        lw.setAttribute('visibility', 'hidden');
-        lr.setAttribute('d', pathFor(0, D)); lr.setAttribute('visibility', 'visible');
-        lg.setAttribute('d', pathFor(2.094, D)); lg.setAttribute('visibility', 'visible');
-        lb.setAttribute('d', pathFor(4.189, D)); lb.setAttribute('visibility', 'visible');
-      }
+      lr.setAttribute('d', chan(-1, 0.7)); lr.setAttribute('visibility', 'visible');
+      lb.setAttribute('d', chan(1, 2.3)); lb.setAttribute('visibility', 'visible');
     }
 
-    /* Scene four: the meter. The spot reticle sweeps the frame the way a
-       hand sweeps a spot meter across a scene; the stop dial's needle and
-       a tick on the false-colour scale track the same reading live. The
-       scale is the app's own: purple below the floor, blue near it, green
-       at mid grey, pink one stop over, and no over-exposure colour. */
-    var mdialLast = '', mrampLast = '';
-    function sceneD(st, w, h){
-      msvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-      var dx0 = 0.35 * w, dx1 = 0.65 * w, dy = 0.90 * h;
-      var dl = '';
-      if (st > 0){
-        var dg = Math.min(1, st / 500);
-        var xm2 = (dx0 + dx1) / 2, half2 = (dx1 - dx0) / 2 * dg;
-        dl = '<line x1="' + (xm2 - half2).toFixed(1) + '" y1="' + dy + '" x2="' + (xm2 + half2).toFixed(1) + '" y2="' + dy + '"/>';
-        if (dg >= 1){
-          for (var k2 = 0; k2 <= 6; k2++){
-            var sx2 = dx0 + k2 * (dx1 - dx0) / 6, th = k2 === 3 ? 8 : 5;
-            dl += '<line x1="' + sx2.toFixed(1) + '" y1="' + dy + '" x2="' + sx2.toFixed(1) + '" y2="' + (dy - th) + '"/>';
-          }
+    /* State 2, the meter: stop ticks grow out of the line, the reticle
+       drifts out of it to sweep and returns, the needle rides the line. */
+    function dressMeter(st, len, w, h){
+      var e = Math.min(grow(st, 100, 300), outEnv(st, len));
+      var x0 = 0.30 * w, x1 = 0.70 * w, y = 0.72 * h;
+      var tk = '';
+      if (e > 0){
+        for (var j = 0; j <= 6; j++){
+          var tx = x0 + j * (x1 - x0) / 6, l = (j === 3 ? 7 : 4.5) * e;
+          tk += '<line x1="' + tx.toFixed(1) + '" y1="' + (y - l).toFixed(1) +
+                '" x2="' + tx.toFixed(1) + '" y2="' + (y + l).toFixed(1) + '"/>';
         }
       }
-      if (dl !== mdialLast){ mdial.innerHTML = dl; mdialLast = dl; }
+      setTicks(tk, '#FFFFFF');
+      var we = Math.min(grow(st, 500, 900), outEnv(st, len));
+      we = we * we * (3 - 2 * we);
+      if (we > 0.01){
+        var tt = st / 1000;
+        var wx = 0.5 * w + 0.30 * w * Math.sin(0.8 * tt + 0.6);
+        var wy = 0.44 * h + 0.26 * h * Math.sin(1.27 * tt + 2.1);
+        var cx = 0.5 * w + (wx - 0.5 * w) * we;
+        var cy = y + (wy - y) * we;
+        mretc.setAttribute('cx', cx.toFixed(1)); mretc.setAttribute('cy', cy.toFixed(1));
+        mretc.setAttribute('r', (14 * Math.min(1, we * 2)).toFixed(1));
+        mretd.setAttribute('cx', cx.toFixed(1)); mretd.setAttribute('cy', cy.toFixed(1));
+        mret.setAttribute('visibility', 'visible');
+        /* One reading: height in frame maps to the stop on the line. */
+        var v = clamp01((0.74 * h - cy) / (0.56 * h));
+        var nx = x0 + v * (x1 - x0);
+        mneedle.setAttribute('x1', nx.toFixed(1)); mneedle.setAttribute('x2', nx.toFixed(1));
+        mneedle.setAttribute('y1', (y - 9).toFixed(1)); mneedle.setAttribute('y2', (y + 9).toFixed(1));
+        mneedle.setAttribute('visibility', 'visible');
+      } else hideMeter();
+    }
 
-      var rx = 0.93 * w, rw2 = 5, ryT = 0.24 * h, ryB = 0.78 * h;
-      var SEG = [
-        [0, 0.12, '#BF5AF2', '.85'], [0.12, 0.30, '#0A84FF', '.85'],
-        [0.30, 0.44, '#FFFFFF', '.14'], [0.44, 0.56, '#30D158', '.85'],
-        [0.56, 0.70, '#FFFFFF', '.14'], [0.70, 0.82, '#FF375F', '.85'],
-        [0.82, 1, '#FFFFFF', '.14']
-      ];
-      var ro = '';
-      if (st > 250){
-        SEG.forEach(function(s2){
-          var yTop = ryB - s2[1] * (ryB - ryT), yH = (s2[1] - s2[0]) * (ryB - ryT);
-          ro += '<rect x="' + rx.toFixed(1) + '" y="' + yTop.toFixed(1) +
-                '" width="' + rw2 + '" height="' + (yH - 1.5).toFixed(1) +
-                '" fill="' + s2[2] + '" fill-opacity="' + s2[3] + '"/>';
+    /* State 3, the blocking: the grid extrudes from the line, the scan box
+       rises from the ground and takes its three orbits, the stand-ins grow
+       on the line, and the A frames them. The line is the subject line. */
+    function dressBlock(st, len, w, h){
+      var yL = 0.88 * h, vpx = 0.5 * w, vpy = 0.40 * h;
+      var out = outEnv(st, len);
+      function gy(f){ return vpy + (yL - vpy) * Math.pow(f, 1.8); }
+      function gx(xb, f){ return vpx + (xb - vpx) * Math.pow(f, 1.8); }
+      var G = Math.min(grow(st, 100, 800), out);
+      var NR = 5, NC = 9, f0 = 1 / NR, o = '';
+      for (var i = 1; i < NR; i++){
+        if (G < i / NR) break;
+        var f = 1 - i * (1 - f0) / NR;
+        o += '<line x1="' + gx(0.06 * w, f).toFixed(1) + '" y1="' + gy(f).toFixed(1) +
+             '" x2="' + gx(0.94 * w, f).toFixed(1) + '" y2="' + gy(f).toFixed(1) + '"/>';
+      }
+      for (var j = 0; j < NC; j++){
+        if (G <= 0) break;
+        var xb = 0.06 * w + j * (0.88 * w) / (NC - 1);
+        var ex = xb + (gx(xb, f0) - xb) * G, ey = yL + (gy(f0) - yL) * G;
+        o += '<line x1="' + xb.toFixed(1) + '" y1="' + yL.toFixed(1) +
+             '" x2="' + ex.toFixed(1) + '" y2="' + ey.toFixed(1) + '"/>';
+      }
+      if (o !== bgridLast){ bgrid.innerHTML = o; bgridLast = o; }
+
+      var B = Math.min(grow(st, 1000, 400), out);
+      var bx = 0.72 * w, bw2 = Math.max(26, 0.085 * w), bhF = Math.max(34, 0.26 * h), by = 0.86 * h;
+      if (B > 0.01){
+        var bh2 = bhF * B;
+        var c = [[bx - bw2 / 2, by], [bx + bw2 / 2, by], [bx + bw2 / 2, by - bh2], [bx - bw2 / 2, by - bh2]];
+        var k = 0.13, d2 = '';
+        var b2 = c.map(function(p){ return [p[0] + (vpx - p[0]) * k, p[1] + (vpy - p[1]) * k]; });
+        for (var e2 = 0; e2 < 4; e2++){
+          var n2 = (e2 + 1) % 4;
+          d2 += 'M' + c[e2][0].toFixed(1) + ' ' + c[e2][1].toFixed(1) + 'L' + c[n2][0].toFixed(1) + ' ' + c[n2][1].toFixed(1) +
+                'M' + b2[e2][0].toFixed(1) + ' ' + b2[e2][1].toFixed(1) + 'L' + b2[n2][0].toFixed(1) + ' ' + b2[n2][1].toFixed(1) +
+                'M' + c[e2][0].toFixed(1) + ' ' + c[e2][1].toFixed(1) + 'L' + b2[e2][0].toFixed(1) + ' ' + b2[e2][1].toFixed(1);
+        }
+        bbox.setAttribute('d', d2);
+        bbox.setAttribute('visibility', 'visible');
+      } else bbox.setAttribute('visibility', 'hidden');
+
+      if (st > 1500 && st < 3300 && out > 0.9){
+        var ot = st - 1500, pass = Math.min(2, Math.floor(ot / 600));
+        var oy = by - bhF * [0.55, 0.8, 0.2][pass], orx = bw2 * 1.5, ory = orx * 0.3;
+        borbit.setAttribute('cx', bx.toFixed(1)); borbit.setAttribute('cy', oy.toFixed(1));
+        borbit.setAttribute('rx', orx.toFixed(1)); borbit.setAttribute('ry', ory.toFixed(1));
+        var a2 = (ot % 600) / 600 * 2 * Math.PI;
+        bdot.setAttribute('cx', (bx + orx * Math.cos(a2)).toFixed(1));
+        bdot.setAttribute('cy', (oy + ory * Math.sin(a2)).toFixed(1));
+        borbit.setAttribute('visibility', 'visible'); bdot.setAttribute('visibility', 'visible');
+      } else { borbit.setAttribute('visibility', 'hidden'); bdot.setAttribute('visibility', 'hidden'); }
+
+      var wr = wm.getBoundingClientRect(), vr = vf.getBoundingClientRect();
+      var sx = wr.width / 76, sy2 = wr.height / 20, wx2 = wr.left - vr.left, wy2 = wr.top - vr.top;
+      var apex = [wx2 + 7 * sx, wy2 + 6.2 * sy2];
+      var ftL = [wx2 + 2 * sx, wy2 + 16 * sy2], ftR = [wx2 + 12 * sx, wy2 + 16 * sy2];
+      function onLeg(ft){ var k2 = (yL - apex[1]) / (ft[1] - apex[1]); return apex[0] + (ft[0] - apex[0]) * k2; }
+      var xL = onLeg(ftL), xR = onLeg(ftR);
+
+      var fx = [xL + (xR - xL) * 0.3, xL + (xR - xL) * 0.72];
+      var born = [3500, 3900], fo = '', fhF = Math.max(18, 0.13 * h);
+      for (var q = 0; q < 2; q++){
+        var F = Math.min(grow(st, born[q], 300), out);
+        if (F > 0.01){
+          var fh2 = fhF * F;
+          fo += '<ellipse cx="' + fx[q].toFixed(1) + '" cy="' + yL.toFixed(1) + '" rx="' + (8 * F).toFixed(1) + '" ry="' + (2.6 * F).toFixed(1) + '"/>' +
+                '<line x1="' + fx[q].toFixed(1) + '" y1="' + yL.toFixed(1) + '" x2="' + fx[q].toFixed(1) + '" y2="' + (yL - fh2).toFixed(1) + '"/>' +
+                '<circle cx="' + fx[q].toFixed(1) + '" cy="' + (yL - fh2 - 4 * F).toFixed(1) + '" r="' + (3 * F).toFixed(1) + '"/>';
+        }
+      }
+      if (fo !== bfigsLast){ bfigs.innerHTML = fo; bfigsLast = fo; }
+
+      var wo = '';
+      var WG = Math.min(grow(st, 4300, 700), out);
+      if (WG > 0.01){
+        [[ftL, xL], [ftR, xR]].forEach(function(pair){
+          var x2 = pair[0][0] + (pair[1] - pair[0][0]) * WG;
+          var y2 = pair[0][1] + (yL - pair[0][1]) * WG;
+          wo += '<line x1="' + pair[0][0].toFixed(1) + '" y1="' + pair[0][1].toFixed(1) +
+                '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
         });
       }
-      if (ro !== mrampLast){ mramp.innerHTML = ro; mrampLast = ro; }
-
-      if (st > 700){
-        var tt = (st - 700) / 1000;
-        var cx2 = 0.5 * w + 0.30 * w * Math.sin(0.7 * tt + 0.6);
-        var cy2 = 0.5 * h + 0.27 * h * Math.sin(1.13 * tt + 2.1);
-        mretc.setAttribute('cx', cx2.toFixed(1)); mretc.setAttribute('cy', cy2.toFixed(1));
-        mretd.setAttribute('cx', cx2.toFixed(1)); mretd.setAttribute('cy', cy2.toFixed(1));
-        mret.setAttribute('visibility', 'visible');
-        /* One reading, three readouts: height in frame maps to the stop. */
-        var v = Math.max(0, Math.min(1, (0.77 * h - cy2) / (0.54 * h)));
-        var nx = dx0 + v * (dx1 - dx0);
-        mneedle.setAttribute('x1', nx.toFixed(1)); mneedle.setAttribute('x2', nx.toFixed(1));
-        mneedle.setAttribute('y1', (dy - 12).toFixed(1)); mneedle.setAttribute('y2', (dy + 4).toFixed(1));
-        mneedle.setAttribute('visibility', 'visible');
-        var my = ryB - v * (ryB - ryT);
-        mmark.setAttribute('x1', (rx - 5).toFixed(1)); mmark.setAttribute('x2', (rx + rw2 + 5).toFixed(1));
-        mmark.setAttribute('y1', my.toFixed(1)); mmark.setAttribute('y2', my.toFixed(1));
-        mmark.setAttribute('visibility', 'visible');
-      } else {
-        mret.setAttribute('visibility', 'hidden');
-        mneedle.setAttribute('visibility', 'hidden');
-        mmark.setAttribute('visibility', 'hidden');
-      }
+      if (wo !== bwedgeLast){ bwedge.innerHTML = wo; bwedgeLast = wo; }
     }
-
-    function sceneSun(st, len, scene){
-      var nowMs = Date.now(), min = Math.floor(nowMs / 6e4);
-      if (min !== lastMin && nowMs > model.day + 864e5) model = dayModel();
-      if (Math.abs(W - lastW) > 0.5 || Math.abs(H - lastH) > 0.5 || min !== lastMin || lastScene !== scene){
-        drawDay(W, H); lastW = W; lastH = H;
-      }
-      var pt = null;
-      if (!reduce && model.samples.length){
-        var p = Math.max(0, Math.min(1, (st - 300) / (len - 600)));
-        pt = model.rise + p * (model.set - model.rise);
-      }
-      drawLive(W, H, nowMs, pt);
-      lastMin = min;
-    }
-
-    var SCENES = [
-      { len: 3000, layer: svg },
-      { len: 6000, layer: bsvg },
-      { len: 6000, layer: lsvg },
-      { len: 6000, layer: msvg }
-    ];
-    var TOTAL = SCENES.reduce(function(a, s){ return a + s.len; }, 0);
 
     function paint(ts){
       if (t0 === null) t0 = ts;
       var tr = reduce ? 0 : ts - t0;
       var cyc = Math.floor(tr / TOTAL), within = tr - cyc * TOTAL;
       var k = 0, st = within;
-      while (k < SCENES.length - 1 && st >= SCENES[k].len){ st -= SCENES[k].len; k++; }
-      if (reduce){ k = 0; st = 0; }
-      var scene = cyc * SCENES.length + k;
-      var rIdx = scene % RATIOS.length;
-      var tgt = fit(RATIOS[rIdx]);
-      if (!reduce && scene > 0 && st < MORPH){
-        var prev = fit(RATIOS[(rIdx + RATIOS.length - 1) % RATIOS.length]);
-        var u = ease(st / MORPH);
-        W = prev[0] + (tgt[0] - prev[0]) * u;
-        H = prev[1] + (tgt[1] - prev[1]) * u;
-      } else { W = tgt[0]; H = tgt[1]; }
+      while (st >= SEG[k].len){ st -= SEG[k].len; k++; }
+      var seg = SEG[k];
+      var t = ts / 1000;
+
+      var ftA = fit(RATIOS[cyc % RATIOS.length]);
+      if (!reduce && seg.to === 0 && seg.from !== undefined){
+        var ftB = fit(RATIOS[(cyc + 1) % RATIOS.length]);
+        var u0 = ease(st / seg.len);
+        W = ftA[0] + (ftB[0] - ftA[0]) * u0;
+        H = ftA[1] + (ftB[1] - ftA[1]) * u0;
+      } else { W = ftA[0]; H = ftA[1]; }
+      if (reduce){ var f2 = fit(2.39); W = f2[0]; H = f2[1]; }
       vf.style.width = W.toFixed(1) + 'px';
       vf.style.height = H.toFixed(1) + 'px';
+      reel.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
 
-      SCENES.forEach(function(s, i){
-        s.layer.setAttribute('visibility', i === k ? 'visible' : 'hidden');
-      });
-
-      if (k === 0) sceneSun(st, SCENES[0].len, scene);
-      else if (k === 1) sceneB(st, W, H);
-      else if (k === 2) sceneC(st, W, H);
-      else sceneD(st, W, H);
-      lastScene = scene;
+      if (reduce || seg.state !== undefined){
+        var state = reduce ? 0 : seg.state;
+        lineEl.setAttribute('d', pathOf(linePts(state, W, H, t)));
+        setStroke(state, state, 0);
+        if (state !== 0) hideSun();
+        if (state !== 1) hideLook();
+        if (state !== 2) hideMeter();
+        if (state !== 3) hideBlock();
+        if (state === 0) dressSun(reduce ? 0 : st, seg.len, W, H);
+        else if (state === 1) dressLook(st, seg.len, W, H, t);
+        else if (state === 2) dressMeter(st, seg.len, W, H);
+        else dressBlock(st, seg.len, W, H);
+      } else {
+        var u = ease(st / seg.len);
+        var A = linePts(seg.from, W, H, t), Bp = linePts(seg.to, W, H, t);
+        var pts = [];
+        for (var i = 0; i <= N; i++) pts.push([A[i][0] + (Bp[i][0] - A[i][0]) * u, A[i][1] + (Bp[i][1] - A[i][1]) * u]);
+        lineEl.setAttribute('d', pathOf(pts));
+        setStroke(seg.from, seg.to, u);
+        hideAll();
+      }
     }
 
     var running = false, raf = 0, tick = 0;
