@@ -39,21 +39,43 @@
   a:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
   .wrap{max-width:760px;margin:0 auto;padding:0 24px}
 
-  /* Hero: the icon's frameline brackets, marking the corners of the page's own
-     column. The brackets alone bound the frame; the first rule belongs to the rows. */
+  /* Hero: a working frame. The brackets hold a real delivery ratio and step
+     through the formats; inside, today's sun path for London is computed and
+     drawn live, in the app's own grammar: orange for now, yellow for the
+     previewed time. Without scripts it is the static 2.39 frame. */
   .frame .inner{
     position:relative;
     height:clamp(220px,41.84vw,360px); /* 2.39:1 until the height cap */
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;
     padding:24px 0;
   }
+  #vframe{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:100%;height:100%;
+  }
   .frame .bracket{position:absolute;width:30px;height:30px}
   .frame .bracket path{stroke:var(--yellow);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
-  .frame .tl{top:16px;left:0}
-  .frame .tr{top:16px;right:0}
-  .frame .bl{bottom:16px;left:0}
-  .frame .br{bottom:16px;right:0}
-  .wordmark{display:block;width:min(64vw,420px);height:auto}
+  .frame .tl{top:0;left:0}
+  .frame .tr{top:0;right:0}
+  .frame .bl{bottom:0;left:0}
+  .frame .br{bottom:0;right:0}
+  #sunpath{position:absolute;inset:0;width:100%;height:100%}
+  #sunpath text{
+    font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    fill:var(--faint);
+  }
+  .vf-read{
+    position:absolute;bottom:10px;
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;
+    color:var(--faint);white-space:nowrap;
+  }
+  #ratio{left:34px}
+  #solar{right:34px}
+  @media (max-width:699px){
+    #sunpath,.vf-read{display:none}
+  }
+  .wordmark{display:block;width:min(64vw,420px);height:auto;position:relative;z-index:1}
+  .frame .tag{position:relative;z-index:1}
   .frame .tag{
     display:flex;flex-wrap:wrap;justify-content:center;
     column-gap:.8em;row-gap:.3em;
@@ -140,10 +162,22 @@
 
 <header class="frame" role="banner">
 <div class="wrap"><div class="inner">
-  <svg class="bracket tl" viewBox="0 0 30 30" aria-hidden="true"><path d="M 12 2 L 6 2 A 4 4 0 0 0 2 6 L 2 12"/></svg>
-  <svg class="bracket tr" viewBox="0 0 30 30" aria-hidden="true"><path d="M 18 2 L 24 2 A 4 4 0 0 1 28 6 L 28 12"/></svg>
-  <svg class="bracket bl" viewBox="0 0 30 30" aria-hidden="true"><path d="M 12 28 L 6 28 A 4 4 0 0 1 2 24 L 2 18"/></svg>
-  <svg class="bracket br" viewBox="0 0 30 30" aria-hidden="true"><path d="M 18 28 L 24 28 A 4 4 0 0 0 28 24 L 28 18"/></svg>
+  <div id="vframe" aria-hidden="true">
+    <svg class="bracket tl" viewBox="0 0 30 30"><path d="M 12 2 L 6 2 A 4 4 0 0 0 2 6 L 2 12"/></svg>
+    <svg class="bracket tr" viewBox="0 0 30 30"><path d="M 18 2 L 24 2 A 4 4 0 0 1 28 6 L 28 12"/></svg>
+    <svg class="bracket bl" viewBox="0 0 30 30"><path d="M 12 28 L 6 28 A 4 4 0 0 1 2 24 L 2 18"/></svg>
+    <svg class="bracket br" viewBox="0 0 30 30"><path d="M 18 28 L 24 28 A 4 4 0 0 0 28 24 L 28 18"/></svg>
+    <svg id="sunpath">
+      <path id="arcline" fill="none" stroke="#FF9F0A" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="4 5"/>
+      <g id="ticks" stroke="#FF9F0A" stroke-opacity=".5" stroke-width="1"></g>
+      <text id="risetxt" text-anchor="start"></text>
+      <text id="settxt" text-anchor="end"></text>
+      <circle id="sunnow" r="4.5" fill="none" stroke="#FF9F0A" stroke-width="1.2" visibility="hidden"/>
+      <circle id="sunprev" r="3.5" fill="#FFCC00" visibility="hidden"/>
+    </svg>
+    <div id="ratio" class="vf-read"></div>
+    <div id="solar" class="vf-read"></div>
+  </div>
   <svg class="wordmark" viewBox="0 0 76 20" role="img" aria-label="Ariadne">
     <g stroke="#FFFFFF" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <path d="M 2 16 L 4.956 6.481 A 2.14 2.14 0 0 1 9.044 6.481 L 12 16" stroke-width="1.5"/>
@@ -298,6 +332,210 @@
     a.href = ['mai', 'lto:'].join('') + addr;
     a.textContent = addr;
     el.replaceChildren(a);
+  })();
+</script>
+
+<script>
+  /* The working frame. The brackets step through real delivery ratios, fitted
+     the way the app fits a sensor's frame to the screen, and today's sun path
+     for London is computed here and drawn in the app's grammar: dashed orange
+     arc with hourly ticks, orange open circle for now, yellow filled dot for
+     the previewed time sweeping the day. Nothing is canned. */
+  (function(){
+    var inner = document.querySelector('.frame .inner');
+    var vf = document.getElementById('vframe');
+    if (!inner || !vf) return;
+
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var wide = matchMedia('(min-width: 700px)');
+    var LAT = 51.5074, LON = -0.1278;
+    var RAD = Math.PI / 180;
+
+    /* Solar position, standard low-precision ephemeris (good to ~0.1 deg). */
+    function sunPos(t){
+      var d = t.getTime() / 864e5 - 10957.5;
+      var g = RAD * (357.529 + 0.98560028 * d);
+      var L = RAD * (280.459 + 0.98564736 * d + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g));
+      var e = RAD * (23.439 - 0.00000036 * d);
+      var dec = Math.asin(Math.sin(e) * Math.sin(L));
+      var ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L));
+      var gmst = (18.697374558 + 24.06570982441908 * d) % 24;
+      var H = RAD * (((gmst * 15 + LON) % 360 + 360) % 360) - ra;
+      var la = RAD * LAT;
+      var elev = Math.asin(Math.sin(la) * Math.sin(dec) + Math.cos(la) * Math.cos(dec) * Math.cos(H));
+      var az = Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(la) - Math.tan(dec) * Math.cos(la));
+      return { elev: elev / RAD, az: (az / RAD + 180 + 360) % 360 };
+    }
+
+    var fmtHM = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false });
+
+    /* Midnight UTC of London's current civil date. */
+    function londonMidnight(){
+      var now = new Date(), p = {};
+      new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false })
+        .formatToParts(now).forEach(function(x){ p[x.type] = x.value; });
+      var off = ((+p.hour - now.getUTCHours()) + 24) % 24;
+      if (off > 12) off -= 24;
+      return Date.UTC(+p.year, +p.month - 1, +p.day) - off * 36e5;
+    }
+
+    /* Today's arc: rise and set at -0.833 deg, elevation samples, hour marks. */
+    function dayModel(){
+      var m0 = londonMidnight(), rise = null, set = null, prev = null;
+      for (var m = 0; m <= 1440; m += 4){
+        var e = sunPos(new Date(m0 + m * 6e4)).elev;
+        if (prev !== null){
+          if (prev < -0.833 && e >= -0.833 && rise === null) rise = m0 + m * 6e4;
+          if (prev >= -0.833 && e < -0.833 && rise !== null && set === null) set = m0 + m * 6e4;
+        }
+        prev = e;
+      }
+      var samples = [], hours = [], maxE = 1;
+      if (rise !== null && set !== null && set > rise){
+        for (var t = rise; t <= set; t += 6e5){
+          var el = Math.max(0, sunPos(new Date(t)).elev);
+          samples.push([t, el]);
+          if (el > maxE) maxE = el;
+        }
+        samples.push([set, 0]);
+        for (var h = m0; h < m0 + 864e5; h += 36e5){
+          if (h > rise && h < set) hours.push([h, Math.max(0, sunPos(new Date(h)).elev)]);
+        }
+      }
+      return { rise: rise, set: set, samples: samples, hours: hours, maxE: maxE, day: m0 };
+    }
+
+    var svg = document.getElementById('sunpath');
+    var arc = document.getElementById('arcline');
+    var ticks = document.getElementById('ticks');
+    var riseT = document.getElementById('risetxt');
+    var setT = document.getElementById('settxt');
+    var nowC = document.getElementById('sunnow');
+    var prevC = document.getElementById('sunprev');
+    var ratioEl = document.getElementById('ratio');
+    var solarEl = document.getElementById('solar');
+
+    var RATIOS = [[2.39, '2.39:1'], [1.85, '1.85:1'], [2.76, '2.76:1'], [16/9, '16:9'], [2, '2:1']];
+    var HOLD = 5000, MORPH = 1100;
+
+    var model = dayModel();
+    var idx = 0, phase = 'hold', phaseT0 = 0, fromW = 0, fromH = 0, W = 0, H = 0;
+    var lastMin = -1, lastW = -1, lastH = -1;
+
+    function fit(r){
+      var mw = inner.clientWidth, mh = inner.clientHeight - 32;
+      var w = Math.min(mw, mh * r);
+      return [w, w / r];
+    }
+    function ease(u){ return u < 0.5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3) / 2; }
+
+    /* Geometry: x maps rise-to-set across the frame, y is true elevation
+       against today's maximum. */
+    function xOf(t, w){ var p = 0.07 * w; return p + (t - model.rise) / (model.set - model.rise) * (w - 2 * p); }
+    function yOf(e, h){ return 0.58 * h - (e / model.maxE) * (0.58 - 0.16) * h; }
+
+    function drawDay(w, h){
+      if (!model.samples.length){ arc.removeAttribute('d'); return; }
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      var d = '';
+      model.samples.forEach(function(s, i){
+        d += (i ? 'L' : 'M') + xOf(s[0], w).toFixed(1) + ' ' + yOf(s[1], h).toFixed(1);
+      });
+      arc.setAttribute('d', d);
+      var tk = '';
+      model.hours.forEach(function(hp){
+        var x = xOf(hp[0], w).toFixed(1), y = yOf(hp[1], h);
+        tk += '<line x1="' + x + '" y1="' + (y - 3).toFixed(1) + '" x2="' + x + '" y2="' + (y + 3).toFixed(1) + '"/>';
+      });
+      ticks.innerHTML = tk;
+      var ty = (0.58 * h + 16).toFixed(1);
+      riseT.setAttribute('x', (0.07 * w).toFixed(1)); riseT.setAttribute('y', ty);
+      setT.setAttribute('x', (0.93 * w).toFixed(1)); setT.setAttribute('y', ty);
+      riseT.textContent = fmtHM.format(model.rise);
+      setT.textContent = fmtHM.format(model.set);
+    }
+
+    function drawLive(w, h, nowMs){
+      var pos = sunPos(new Date(nowMs));
+      solarEl.textContent = 'LONDON · SUN ' + Math.round(pos.az) + '° ' + (pos.elev >= 0 ? '+' : '') + Math.round(pos.elev) + '°';
+      var nowUp = model.samples.length && nowMs > model.rise && nowMs < model.set;
+      if (nowUp){
+        nowC.setAttribute('cx', xOf(nowMs, w).toFixed(1));
+        nowC.setAttribute('cy', yOf(Math.max(0, pos.elev), h).toFixed(1));
+      }
+      var show = nowUp;
+      if (!reduce && model.samples.length){
+        var u = (performance.now() % 45000) / 45000;
+        var pt = model.rise + u * (model.set - model.rise);
+        prevC.setAttribute('cx', xOf(pt, w).toFixed(1));
+        prevC.setAttribute('cy', yOf(Math.max(0, sunPos(new Date(pt)).elev), h).toFixed(1));
+        prevC.setAttribute('visibility', 'visible');
+        /* Where previewed and now coincide, only previewed is drawn. */
+        if (nowUp && Math.abs(pt - nowMs) < 12e5) show = false;
+      }
+      nowC.setAttribute('visibility', show ? 'visible' : 'hidden');
+    }
+
+    function paint(ts){
+      if (phase === 'hold' && ts - phaseT0 > HOLD && !reduce){
+        phase = 'morph'; phaseT0 = ts;
+        fromW = W; fromH = H;
+        idx = (idx + 1) % RATIOS.length;
+        ratioEl.textContent = RATIOS[idx][1];
+      }
+      var tgt = fit(RATIOS[idx][0]);
+      if (phase === 'morph'){
+        var u = Math.min(1, (ts - phaseT0) / MORPH);
+        W = fromW + (tgt[0] - fromW) * ease(u);
+        H = fromH + (tgt[1] - fromH) * ease(u);
+        if (u >= 1){ phase = 'hold'; phaseT0 = ts; }
+      } else { W = tgt[0]; H = tgt[1]; }
+      vf.style.width = W.toFixed(1) + 'px';
+      vf.style.height = H.toFixed(1) + 'px';
+
+      var nowMs = Date.now(), min = Math.floor(nowMs / 6e4);
+      if (min !== lastMin && nowMs > model.day + 864e5) model = dayModel();
+      if (Math.abs(W - lastW) > 0.5 || Math.abs(H - lastH) > 0.5 || min !== lastMin){
+        drawDay(W, H); lastW = W; lastH = H;
+      }
+      drawLive(W, H, nowMs);
+      lastMin = min;
+    }
+
+    var running = false, raf = 0, tick = 0;
+    function loop(ts){ if (!running) return; paint(ts); raf = requestAnimationFrame(loop); }
+    function start(){
+      if (!wide.matches){ vf.style.width = ''; vf.style.height = ''; return; }
+      if (running) return;
+      running = true; phaseT0 = performance.now();
+      if (reduce){
+        paint(performance.now());
+        tick = setInterval(function(){ paint(performance.now()); }, 30000);
+      } else {
+        raf = requestAnimationFrame(loop);
+      }
+    }
+    function stop(){
+      running = false;
+      cancelAnimationFrame(raf); clearInterval(tick);
+    }
+    function reset(){
+      stop();
+      if (!wide.matches){ vf.style.width = ''; vf.style.height = ''; return; }
+      start();
+    }
+
+    ratioEl.textContent = RATIOS[0][1];
+    var s0 = fit(RATIOS[0][0]); W = s0[0]; H = s0[1];
+
+    if ('IntersectionObserver' in window){
+      new IntersectionObserver(function(en){ en[0].isIntersecting ? start() : stop(); }).observe(inner);
+    } else start();
+    document.addEventListener('visibilitychange', function(){
+      document.hidden ? stop() : start();
+    });
+    addEventListener('resize', function(){ if (running) return; reset(); });
+    if (wide.addEventListener) wide.addEventListener('change', reset);
   })();
 </script>
 
