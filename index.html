@@ -436,21 +436,19 @@
     var t0 = null, W = 0, H = 0, lastMin = -1;
     var ticksLast = '', bgridLast = '';
 
-    /* The reel: holds and morphs. One ratio per cycle, re-framed during
-       the rebirth at the end. */
-    var SEG = [
-      { state: 0, len: 4000 },
-      { from: 0, to: 1, len: 1200 },
-      { state: 1, len: 5000 },
-      { from: 1, to: 2, len: 1200 },
-      { state: 2, len: 5000 },
-      { from: 2, to: 3, len: 1200 },
-      { state: 3, len: 5000 },
-      { from: 3, to: 0, len: 1400 }
+    /* The reel: four scenes, no cuts and no gaps. The line starts
+       repurposing itself LEAD before each scene ends and settles only
+       SETTLE after the next has begun. */
+    var SCN = [
+      { state: 0, len: 4800 },
+      { state: 1, len: 5800 },
+      { state: 2, len: 5800 },
+      { state: 3, len: 5800 }
     ];
     var TOTAL = 0;
-    SEG.forEach(function(s){ TOTAL += s.len; });
+    SCN.forEach(function(s){ TOTAL += s.len; });
     var N = 64;
+    var LEAD = 600, SETTLE = 800;
 
     function fit(r){
       var mw = inner.clientWidth, mh = inner.clientHeight - 32;
@@ -503,6 +501,14 @@
       for (var i = 0; i <= N; i++) pts.push(lineXY(state, i / N, w, h, t));
       return pts;
     }
+    /* The line as drawn this frame. Everything anchors to this, so the
+       dressing rides the line even while it is mid-warp. */
+    var LIVE = null;
+    function liveXY(xn){
+      var f = clamp01(xn) * N, i0 = Math.min(N - 1, Math.floor(f)), fr = f - i0;
+      var a = LIVE[i0], b = LIVE[i0 + 1];
+      return [a[0] + (b[0] - a[0]) * fr, a[1] + (b[1] - a[1]) * fr];
+    }
     function pathOf(pts){
       var d = '';
       for (var i = 0; i < pts.length; i++) d += (i ? 'L' : 'M') + pts[i][0].toFixed(1) + ' ' + pts[i][1].toFixed(1);
@@ -534,7 +540,6 @@
     function hideBlock(){
       if (bgridLast !== ''){ bgrid.innerHTML = ''; bgridLast = ''; }
     }
-    function hideAll(){ hideSun(); hideLook(); hideMeter(); hideBlock(); setTicks('', '#FFFFFF'); }
 
     /* State 0, the sun: hour ticks live on the line, the previewed-time
        dot sweeps the day, the now circle sits where the sun really is. */
@@ -547,7 +552,7 @@
       if (model.samples.length && e > 0){
         model.hours.forEach(function(hp){
           var xn = (hp[0] - model.rise) / (model.set - model.rise);
-          var p = lineXY(0, xn, w, h, t), l = 3 * e;
+          var p = liveXY(xn), l = 3 * e;
           tk += '<line x1="' + p[0].toFixed(1) + '" y1="' + (p[1] - l).toFixed(1) +
                 '" x2="' + p[0].toFixed(1) + '" y2="' + (p[1] + l).toFixed(1) + '"/>';
         });
@@ -555,13 +560,13 @@
       setTicks(tk, '#FF9F0A');
       var show = false;
       if (model.samples.length && nowMs > model.rise && nowMs < model.set){
-        var pn = lineXY(0, (nowMs - model.rise) / (model.set - model.rise), w, h, t);
+        var pn = liveXY((nowMs - model.rise) / (model.set - model.rise));
         nowC.setAttribute('cx', pn[0].toFixed(1)); nowC.setAttribute('cy', pn[1].toFixed(1));
         show = true;
       }
       if (!reduce && model.samples.length){
         var u = clamp01((st - 200) / (len - 500));
-        var pp = lineXY(0, u, w, h, t);
+        var pp = liveXY(u);
         prevC.setAttribute('cx', pp[0].toFixed(1)); prevC.setAttribute('cy', pp[1].toFixed(1));
         prevC.setAttribute('visibility', 'visible');
         /* Where previewed and now coincide, only previewed is drawn. */
@@ -573,14 +578,14 @@
     /* State 1, the look: red and blue channels diverge from the line,
        weave, and fold back into it. */
     function dressLook(st, len, w, h, t){
-      var D = Math.min(grow(st, 700, 900), clamp01((4200 - st) / 800));
+      var D = Math.min(grow(st, 700, 900), clamp01((4800 - st) / 800));
       D = D * D * (3 - 2 * D);
       if (D <= 0.02){ hideLook(); return; }
       function chan(sign, ph){
         var d = '';
         for (var i = 0; i <= N; i++){
           var xn = i / N;
-          var p = lineXY(1, xn, w, h, t);
+          var p = liveXY(xn);
           var off = D * 0.039 * h * (0.55 + 0.45 * Math.sin(8.2 * xn + ph + 0.5 * Math.sin(0.9 * t + ph))) * Math.sin(Math.PI * xn);
           d += (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + (p[1] + sign * off).toFixed(1);
         }
@@ -597,7 +602,7 @@
       var tk = '';
       if (e > 0){
         for (var j = 0; j <= 6; j++){
-          var p = lineXY(2, j / 6, w, h, t), l = (j === 3 ? 7 : 4.5) * e;
+          var p = liveXY(j / 6), l = (j === 3 ? 7 : 4.5) * e;
           tk += '<line x1="' + p[0].toFixed(1) + '" y1="' + (p[1] - l).toFixed(1) +
                 '" x2="' + p[0].toFixed(1) + '" y2="' + (p[1] + l).toFixed(1) + '"/>';
         }
@@ -607,7 +612,7 @@
       we = we * we * (3 - 2 * we);
       if (we > 0.01){
         var tt = st / 1000;
-        var anchor = lineXY(2, 0.5, w, h, t);
+        var anchor = liveXY(0.5);
         var wx = 0.5 * w + 0.30 * w * Math.sin(0.8 * tt + 0.6);
         var wy = 0.44 * h + 0.26 * h * Math.sin(1.27 * tt + 2.1);
         var cx = anchor[0] + (wx - anchor[0]) * we;
@@ -618,7 +623,7 @@
         mret.setAttribute('visibility', 'visible');
         /* One reading: height in frame maps to the stop on the line. */
         var v = clamp01((0.74 * h - cy) / (0.56 * h));
-        var np = lineXY(2, v, w, h, t);
+        var np = liveXY(v);
         mneedle.setAttribute('x1', np[0].toFixed(1)); mneedle.setAttribute('x2', np[0].toFixed(1));
         mneedle.setAttribute('y1', (np[1] - 9).toFixed(1)); mneedle.setAttribute('y2', (np[1] + 9).toFixed(1));
         mneedle.setAttribute('visibility', 'visible');
@@ -645,7 +650,7 @@
         }
         for (var j = 0; j < NC; j++){
           var xb = 0.06 * w + j * (0.88 * w) / (NC - 1);
-          var bp = lineXY(3, j / (NC - 1), w, h, t);
+          var bp = liveXY(j / (NC - 1));
           var ex = bp[0] + (gx(xb, f0) - bp[0]) * G, ey = bp[1] + (gy(f0) - bp[1]) * G;
           o += '<line x1="' + bp[0].toFixed(1) + '" y1="' + bp[1].toFixed(1) +
                '" x2="' + ex.toFixed(1) + '" y2="' + ey.toFixed(1) + '"/>';
@@ -659,8 +664,8 @@
       var tr = reduce ? 0 : ts - t0;
       var within = tr % TOTAL;
       var k = 0, st = within;
-      while (st >= SEG[k].len){ st -= SEG[k].len; k++; }
-      var seg = SEG[k];
+      while (st >= SCN[k].len){ st -= SCN[k].len; k++; }
+      var scn = SCN[k], cur = scn.state;
       var t = ts / 1000;
 
       /* One frame, held: 2.39. The line does all the moving. */
@@ -670,32 +675,48 @@
       vf.style.height = H.toFixed(1) + 'px';
       reel.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
 
-      if (reduce || seg.state !== undefined){
-        var state = reduce ? 0 : seg.state;
-        lineEl.setAttribute('d', pathOf(linePts(state, W, H, t)));
-        setStroke(state, state, 0);
-        if (state !== 0) hideSun();
-        if (state !== 1) hideLook();
-        if (state !== 2) hideMeter();
-        if (state !== 3) hideBlock();
-        if (state === 0) dressSun(reduce ? 0 : st, seg.len, W, H, reduce ? 0 : t);
-        else if (state === 1) dressLook(st, seg.len, W, H, t);
-        else if (state === 2) dressMeter(st, seg.len, W, H, t);
-        else dressBlock(st, seg.len, W, H, t);
-      } else {
-        /* The warp: the line's head leads and its tail follows, so it
-           flows into the next shape rather than translating rigidly. */
-        var p = st / seg.len;
-        var A = linePts(seg.from, W, H, t), Bp = linePts(seg.to, W, H, t);
-        var pts = [];
-        for (var i = 0; i <= N; i++){
-          var ui = ease(clamp01(p * 1.3 - 0.3 * (i / N)));
-          pts.push([A[i][0] + (Bp[i][0] - A[i][0]) * ui, A[i][1] + (Bp[i][1] - A[i][1]) * ui]);
-        }
-        lineEl.setAttribute('d', pathOf(pts));
-        setStroke(seg.from, seg.to, ease(p));
-        hideAll();
+      if (reduce){
+        LIVE = linePts(0, W, H, 0);
+        lineEl.setAttribute('d', pathOf(LIVE));
+        setStroke(0, 0, 0);
+        hideLook(); hideMeter(); hideBlock();
+        dressSun(0, SCN[0].len, W, H, 0);
+        return;
       }
+
+      /* The overlap: a warp window straddles each boundary, and the
+         line's head leads while its tail follows. */
+      var A = -1, B = -1, P = 0;
+      if (st < SETTLE){
+        A = SCN[(k + SCN.length - 1) % SCN.length].state; B = cur;
+        P = (st + LEAD) / (LEAD + SETTLE);
+      } else if (st > scn.len - LEAD){
+        A = cur; B = SCN[(k + 1) % SCN.length].state;
+        P = (st - (scn.len - LEAD)) / (LEAD + SETTLE);
+      }
+      if (A >= 0){
+        var pa = linePts(A, W, H, t), pb = linePts(B, W, H, t), pts = [];
+        for (var i = 0; i <= N; i++){
+          var ui = ease(clamp01(P * 1.3 - 0.3 * (i / N)));
+          pts.push([pa[i][0] + (pb[i][0] - pa[i][0]) * ui, pa[i][1] + (pb[i][1] - pa[i][1]) * ui]);
+        }
+        LIVE = pts;
+        setStroke(A, B, ease(P));
+      } else {
+        LIVE = linePts(cur, W, H, t);
+        setStroke(cur, cur, 0);
+      }
+      lineEl.setAttribute('d', pathOf(LIVE));
+
+      if (cur !== 0) hideSun();
+      if (cur !== 1) hideLook();
+      if (cur !== 2) hideMeter();
+      if (cur !== 3) hideBlock();
+      if (cur === 1 || cur === 3) setTicks('', '#FFFFFF');
+      if (cur === 0) dressSun(st, scn.len, W, H, t);
+      else if (cur === 1) dressLook(st, scn.len, W, H, t);
+      else if (cur === 2) dressMeter(st, scn.len, W, H, t);
+      else dressBlock(st, scn.len, W, H, t);
     }
 
     var running = false, raf = 0, tick = 0;
