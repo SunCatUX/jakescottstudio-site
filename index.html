@@ -158,13 +158,15 @@
     </svg>
     <svg id="look" visibility="hidden">
       <g id="laxis" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="1"></g>
-      <path id="lcurve" fill="none" stroke="#FFFFFF" stroke-opacity=".75" stroke-width="1.4"/>
-      <circle id="lgrey" r="3.5" fill="#FFCC00" visibility="hidden"/>
+      <path id="lw" fill="none" stroke="#FFFFFF" stroke-opacity=".75" stroke-width="1.4" visibility="hidden"/>
+      <path id="lr" fill="none" stroke="#FF453A" stroke-opacity=".8" stroke-width="1.4" visibility="hidden"/>
+      <path id="lg" fill="none" stroke="#30D158" stroke-opacity=".8" stroke-width="1.4" visibility="hidden"/>
+      <path id="lb" fill="none" stroke="#0A84FF" stroke-opacity=".8" stroke-width="1.4" visibility="hidden"/>
     </svg>
     <svg id="meter" visibility="hidden">
-      <g id="mzones" fill="none" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="1" stroke-dasharray="4 4"></g>
-      <g id="mfills"></g>
       <g id="mdial" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="1"></g>
+      <g id="mramp"></g>
+      <line id="mmark" stroke="#FFFFFF" stroke-opacity=".9" stroke-width="1.5" visibility="hidden"/>
       <line id="mneedle" stroke="#FFCC00" stroke-width="2" visibility="hidden"/>
       <g id="mret" fill="none" stroke="#FFCC00" stroke-width="1.4" visibility="hidden">
         <circle id="mretc" r="14"/>
@@ -452,11 +454,13 @@
     var bwedge = document.getElementById('bwedge');
     var lsvg = document.getElementById('look');
     var laxis = document.getElementById('laxis');
-    var lcurve = document.getElementById('lcurve');
-    var lgrey = document.getElementById('lgrey');
+    var lw = document.getElementById('lw');
+    var lr = document.getElementById('lr');
+    var lg = document.getElementById('lg');
+    var lb = document.getElementById('lb');
     var msvg = document.getElementById('meter');
-    var mzones = document.getElementById('mzones');
-    var mfills = document.getElementById('mfills');
+    var mramp = document.getElementById('mramp');
+    var mmark = document.getElementById('mmark');
     var mdial = document.getElementById('mdial');
     var mneedle = document.getElementById('mneedle');
     var mret = document.getElementById('mret');
@@ -618,30 +622,16 @@
       if (wo !== bwedgeLast){ bwedge.innerHTML = wo; bwedgeLast = wo; }
     }
 
-    /* Scene three: the look. One response curve morphs through four
-       characteristic shapes (display S-curve, negative's long shoulder,
-       reversal's hard clip, black-and-white's long roll) while a yellow
-       dot pinned at the 18% grey input shows where mid grey lands. */
-    var SHAPES = [
-      [0.02, 0.10, 0.32, 0.62, 0.86, 0.97],
-      [0.05, 0.18, 0.42, 0.66, 0.82, 0.90],
-      [0.01, 0.06, 0.30, 0.75, 0.96, 1.00],
-      [0.04, 0.16, 0.38, 0.58, 0.74, 0.86]
-    ];
+    /* Scene three: the look. One rippling response curve diverges into
+       its red, green and blue channels, the channels weave, and the line
+       breathes back to neutral before the cut: the RGB curve of the Look
+       sheet, given motion. */
+    var LBASE = [0.03, 0.14, 0.36, 0.62, 0.84, 0.95];
     var laxisLast = '';
-    function shapeAt(st){
-      var HOLDS = [1200, 2200, 3550, 4900], FADE = 350;
-      var a = SHAPES[0], b = SHAPES[0], u = 0;
-      for (var s = 1; s < 4; s++){
-        var tStart = HOLDS[s];
-        if (st >= tStart){ a = SHAPES[s - 1]; b = SHAPES[s]; u = Math.min(1, (st - tStart) / FADE); }
-      }
-      return a.map(function(v, i){ return v + (b[i] - v) * u; });
-    }
-    function curveY(p, xn){
+    function baseY(xn){
       var seg = Math.min(4, Math.floor(xn * 5)), u = xn * 5 - seg;
       var m = (1 - Math.cos(u * Math.PI)) / 2;
-      return p[seg] + (p[seg + 1] - p[seg]) * m;
+      return LBASE[seg] + (LBASE[seg + 1] - LBASE[seg]) * m;
     }
     function sceneC(st, w, h){
       lsvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
@@ -656,45 +646,48 @@
         }
       }
       if (ax !== laxisLast){ laxis.innerHTML = ax; laxisLast = ax; }
-      if (st > 500){
-        var p = shapeAt(st);
-        var fx = Math.min(1, (st - 500) / 700);
+
+      var plotH = yb - yt, t = st / 1000;
+      var fx = st < 450 ? 0 : Math.min(1, (st - 450) / 700);
+      /* Divergence envelope: neutral, graded, neutral. */
+      var D = 0;
+      if (st > 1300) D = Math.min(1, (st - 1300) / 900);
+      if (st > 4500) D = Math.max(0, 1 - (st - 4500) / 800);
+      D = D * D * (3 - 2 * D);
+      function pathFor(ph, dAmp){
         var d = '';
-        for (var i = 0; i <= 28; i++){
-          var xn = i / 28 * fx;
-          d += (i ? 'L' : 'M') + (x0 + (x1 - x0) * xn).toFixed(1) + ' ' +
-               (yb - (yb - yt) * curveY(p, xn)).toFixed(1);
+        for (var i = 0; i <= 32; i++){
+          var xn = i / 32 * fx;
+          var env = Math.sin(Math.PI * xn);
+          var yy = yb - plotH * baseY(xn)
+            + plotH * 0.018 * Math.sin(15.7 * xn - 2.2 * t + ph * 0.5) * env
+            - plotH * 0.085 * dAmp * Math.sin(6.9 * xn + ph + 0.5 * Math.sin(0.9 * t + ph)) * env;
+          d += (i ? 'L' : 'M') + (x0 + (x1 - x0) * xn).toFixed(1) + ' ' + yy.toFixed(1);
         }
-        lcurve.setAttribute('d', d);
-        if (st > 1200){
-          var gx = 0.45;
-          lgrey.setAttribute('cx', (x0 + (x1 - x0) * gx).toFixed(1));
-          lgrey.setAttribute('cy', (yb - (yb - yt) * curveY(p, gx)).toFixed(1));
-          lgrey.setAttribute('visibility', 'visible');
-        } else lgrey.setAttribute('visibility', 'hidden');
-      } else { lcurve.removeAttribute('d'); lgrey.setAttribute('visibility', 'hidden'); }
+        return d;
+      }
+      if (fx <= 0){
+        lw.setAttribute('visibility', 'hidden');
+        lr.setAttribute('visibility', 'hidden'); lg.setAttribute('visibility', 'hidden'); lb.setAttribute('visibility', 'hidden');
+      } else if (D <= 0.02){
+        lw.setAttribute('d', pathFor(0, 0)); lw.setAttribute('visibility', 'visible');
+        lr.setAttribute('visibility', 'hidden'); lg.setAttribute('visibility', 'hidden'); lb.setAttribute('visibility', 'hidden');
+      } else {
+        lw.setAttribute('visibility', 'hidden');
+        lr.setAttribute('d', pathFor(0, D)); lr.setAttribute('visibility', 'visible');
+        lg.setAttribute('d', pathFor(2.094, D)); lg.setAttribute('visibility', 'visible');
+        lb.setAttribute('d', pathFor(4.189, D)); lb.setAttribute('visibility', 'visible');
+      }
     }
 
-    /* Scene four: the meter. The spot reticle samples three patches of a
-       scene and an analogue stop dial takes each reading; then the patches
-       paint in the app's false-colour bands: green mid grey, pink one stop
-       over, blue near the floor. */
-    var mzonesLast = '', mdialLast = '', mfillsLast = '';
+    /* Scene four: the meter. The spot reticle sweeps the frame the way a
+       hand sweeps a spot meter across a scene; the stop dial's needle and
+       a tick on the false-colour scale track the same reading live. The
+       scale is the app's own: purple below the floor, blue near it, green
+       at mid grey, pink one stop over, and no over-exposure colour. */
+    var mdialLast = '', mrampLast = '';
     function sceneD(st, w, h){
       msvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-      var Z = [
-        [0.14 * w, 0.24 * h, 0.18 * w, 0.20 * h],
-        [0.62 * w, 0.28 * h, 0.13 * w, 0.17 * h],
-        [0.30 * w, 0.72 * h, 0.16 * w, 0.15 * h]
-      ];
-      var zo = '';
-      if (st > 200){
-        Z.forEach(function(z){
-          zo += '<rect x="' + z[0].toFixed(1) + '" y="' + z[1].toFixed(1) +
-                '" width="' + z[2].toFixed(1) + '" height="' + z[3].toFixed(1) + '"/>';
-        });
-      }
-      if (zo !== mzonesLast){ mzones.innerHTML = zo; mzonesLast = zo; }
       var dx0 = 0.35 * w, dx1 = 0.65 * w, dy = 0.90 * h;
       var dl = '';
       if (st > 0){
@@ -709,36 +702,47 @@
         }
       }
       if (dl !== mdialLast){ mdial.innerHTML = dl; mdialLast = dl; }
-      /* Sample stops: mid, +1, -2. Needle position is the reading. */
-      var STOPS = [0, 1, -2], ARRIVE = [700, 1900, 3100];
-      var zi = -1, v = 0;
-      for (var q2 = 0; q2 < 3; q2++){
-        if (st >= ARRIVE[q2]){
-          zi = q2;
-          var prev2 = q2 === 0 ? STOPS[0] : STOPS[q2 - 1];
-          var eu = Math.min(1, (st - ARRIVE[q2]) / 300);
-          v = prev2 + (STOPS[q2] - prev2) * ease(eu);
-        }
+
+      var rx = 0.93 * w, rw2 = 5, ryT = 0.24 * h, ryB = 0.78 * h;
+      var SEG = [
+        [0, 0.12, '#BF5AF2', '.85'], [0.12, 0.30, '#0A84FF', '.85'],
+        [0.30, 0.44, '#FFFFFF', '.14'], [0.44, 0.56, '#30D158', '.85'],
+        [0.56, 0.70, '#FFFFFF', '.14'], [0.70, 0.82, '#FF375F', '.85'],
+        [0.82, 1, '#FFFFFF', '.14']
+      ];
+      var ro = '';
+      if (st > 250){
+        SEG.forEach(function(s2){
+          var yTop = ryB - s2[1] * (ryB - ryT), yH = (s2[1] - s2[0]) * (ryB - ryT);
+          ro += '<rect x="' + rx.toFixed(1) + '" y="' + yTop.toFixed(1) +
+                '" width="' + rw2 + '" height="' + (yH - 1.5).toFixed(1) +
+                '" fill="' + s2[2] + '" fill-opacity="' + s2[3] + '"/>';
+        });
       }
-      if (zi >= 0){
-        var zc = Z[zi];
-        mretc.setAttribute('cx', (zc[0] + zc[2] / 2).toFixed(1)); mretc.setAttribute('cy', (zc[1] + zc[3] / 2).toFixed(1));
-        mretd.setAttribute('cx', (zc[0] + zc[2] / 2).toFixed(1)); mretd.setAttribute('cy', (zc[1] + zc[3] / 2).toFixed(1));
+      if (ro !== mrampLast){ mramp.innerHTML = ro; mrampLast = ro; }
+
+      if (st > 700){
+        var tt = (st - 700) / 1000;
+        var cx2 = 0.5 * w + 0.30 * w * Math.sin(0.7 * tt + 0.6);
+        var cy2 = 0.5 * h + 0.27 * h * Math.sin(1.13 * tt + 2.1);
+        mretc.setAttribute('cx', cx2.toFixed(1)); mretc.setAttribute('cy', cy2.toFixed(1));
+        mretd.setAttribute('cx', cx2.toFixed(1)); mretd.setAttribute('cy', cy2.toFixed(1));
         mret.setAttribute('visibility', 'visible');
-        var nx = dx0 + (v + 3) / 6 * (dx1 - dx0);
+        /* One reading, three readouts: height in frame maps to the stop. */
+        var v = Math.max(0, Math.min(1, (0.77 * h - cy2) / (0.54 * h)));
+        var nx = dx0 + v * (dx1 - dx0);
         mneedle.setAttribute('x1', nx.toFixed(1)); mneedle.setAttribute('x2', nx.toFixed(1));
         mneedle.setAttribute('y1', (dy - 12).toFixed(1)); mneedle.setAttribute('y2', (dy + 4).toFixed(1));
         mneedle.setAttribute('visibility', 'visible');
-      } else { mret.setAttribute('visibility', 'hidden'); mneedle.setAttribute('visibility', 'hidden'); }
-      var FC = ['#30D158', '#FF375F', '#0A84FF'], fo2 = '';
-      if (st > 4600){
-        Z.forEach(function(z, i2){
-          fo2 += '<rect x="' + z[0].toFixed(1) + '" y="' + z[1].toFixed(1) +
-                 '" width="' + z[2].toFixed(1) + '" height="' + z[3].toFixed(1) +
-                 '" fill="' + FC[i2] + '" fill-opacity=".38"/>';
-        });
+        var my = ryB - v * (ryB - ryT);
+        mmark.setAttribute('x1', (rx - 5).toFixed(1)); mmark.setAttribute('x2', (rx + rw2 + 5).toFixed(1));
+        mmark.setAttribute('y1', my.toFixed(1)); mmark.setAttribute('y2', my.toFixed(1));
+        mmark.setAttribute('visibility', 'visible');
+      } else {
+        mret.setAttribute('visibility', 'hidden');
+        mneedle.setAttribute('visibility', 'hidden');
+        mmark.setAttribute('visibility', 'hidden');
       }
-      if (fo2 !== mfillsLast){ mfills.innerHTML = fo2; mfillsLast = fo2; }
     }
 
     function sceneSun(st, len, scene){
