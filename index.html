@@ -149,10 +149,6 @@
       <circle id="sunnow" r="4.5" fill="none" stroke="#FF9F0A" stroke-width="1.2" visibility="hidden"/>
       <circle id="sunprev" r="3.5" fill="#FFCC00" visibility="hidden"/>
       <line id="mneedle" stroke="#FFCC00" stroke-width="2" visibility="hidden"/>
-      <g id="mret" fill="none" stroke="#FFCC00" stroke-width="1.4" visibility="hidden">
-        <circle id="mretc" r="14"/>
-        <circle id="mretd" r="1.5" fill="#FFCC00" stroke="none"/>
-      </g>
     </svg>
   </div>
   <svg class="wordmark" viewBox="0 0 76 20" role="img" aria-label="Ariadne">
@@ -427,9 +423,6 @@
     var lr = document.getElementById('lr');
     var lb = document.getElementById('lb');
     var mneedle = document.getElementById('mneedle');
-    var mret = document.getElementById('mret');
-    var mretc = document.getElementById('mretc');
-    var mretd = document.getElementById('mretd');
     var bgrid = document.getElementById('bgrid');
 
     var model = dayModel();
@@ -538,7 +531,7 @@
 
     function hideSun(){ nowC.setAttribute('visibility', 'hidden'); prevC.setAttribute('visibility', 'hidden'); }
     function hideLook(){ lr.setAttribute('visibility', 'hidden'); lb.setAttribute('visibility', 'hidden'); }
-    function hideMeter(){ mret.setAttribute('visibility', 'hidden'); mneedle.setAttribute('visibility', 'hidden'); }
+    function hideMeter(){ mneedle.setAttribute('visibility', 'hidden'); }
     function hideBlock(){
       if (bgridLast !== ''){ bgrid.innerHTML = ''; bgridLast = ''; }
     }
@@ -610,24 +603,16 @@
         }
       }
       setTicks(tk, '#FFFFFF');
-      var we = Math.min(grow(st, 500, 900), outEnv(st, len));
+      var we = Math.min(grow(st, 500, 700), outEnv(st, len));
       we = we * we * (3 - 2 * we);
       if (we > 0.01){
         var tt = st / 1000;
-        var anchor = liveXY(0.5);
-        var wx = 0.5 * w + 0.30 * w * Math.sin(0.8 * tt + 0.6);
-        var wy = 0.44 * h + 0.26 * h * Math.sin(1.27 * tt + 2.1);
-        var cx = anchor[0] + (wx - anchor[0]) * we;
-        var cy = anchor[1] + (wy - anchor[1]) * we;
-        mretc.setAttribute('cx', cx.toFixed(1)); mretc.setAttribute('cy', cy.toFixed(1));
-        mretc.setAttribute('r', (14 * Math.min(1, we * 2)).toFixed(1));
-        mretd.setAttribute('cx', cx.toFixed(1)); mretd.setAttribute('cy', cy.toFixed(1));
-        mret.setAttribute('visibility', 'visible');
-        /* One reading: height in frame maps to the stop on the line. */
-        var v = clamp01((0.74 * h - cy) / (0.56 * h));
+        /* The reading drifts the way a held meter breathes. */
+        var v = clamp01(0.5 + 0.34 * Math.sin(0.6 * tt + 0.7) + 0.10 * Math.sin(1.45 * tt + 2.4));
+        v = 0.5 + (v - 0.5) * we;
         var np = liveXY(v);
         mneedle.setAttribute('x1', np[0].toFixed(1)); mneedle.setAttribute('x2', np[0].toFixed(1));
-        mneedle.setAttribute('y1', (np[1] - 9).toFixed(1)); mneedle.setAttribute('y2', (np[1] + 9).toFixed(1));
+        mneedle.setAttribute('y1', (np[1] - 9 * we).toFixed(1)); mneedle.setAttribute('y2', (np[1] + 9 * we).toFixed(1));
         mneedle.setAttribute('visibility', 'visible');
       } else hideMeter();
     }
@@ -671,20 +656,20 @@
       var t = ts / 1000;
       var cyc = Math.floor(tr / TOTAL);
 
-      /* The frame holds one ratio per cycle and re-formats only inside
-         the rebirth warp, as the ground lifts into tomorrow's arc. */
-      var ft = fit(RATIOS[cyc % RATIOS.length]);
+      /* One delivery ratio per scene; each reframe rides its warp. */
+      var scnIdx = cyc * SCN.length + k;
+      var ft = fit(RATIOS[scnIdx % RATIOS.length]);
       if (reduce){
         ft = fit(2.39);
         W = ft[0]; H = ft[1];
-      } else if (k === SCN.length - 1 && st > scn.len - LEAD){
+      } else if (st > scn.len - LEAD){
         var uR = ease((st - (scn.len - LEAD)) / (LEAD + SETTLE));
-        var ftN = fit(RATIOS[(cyc + 1) % RATIOS.length]);
+        var ftN = fit(RATIOS[(scnIdx + 1) % RATIOS.length]);
         W = ft[0] + (ftN[0] - ft[0]) * uR;
         H = ft[1] + (ftN[1] - ft[1]) * uR;
-      } else if (k === 0 && st < SETTLE){
+      } else if (st < SETTLE){
         var uS = ease((st + LEAD) / (LEAD + SETTLE));
-        var ftP = fit(RATIOS[(cyc + RATIOS.length - 1) % RATIOS.length]);
+        var ftP = fit(RATIOS[(scnIdx + RATIOS.length - 1) % RATIOS.length]);
         W = ftP[0] + (ft[0] - ftP[0]) * uS;
         H = ftP[1] + (ft[1] - ftP[1]) * uS;
       } else { W = ft[0]; H = ft[1]; }
