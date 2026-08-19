@@ -60,7 +60,7 @@
   .frame .tr{top:0;right:0}
   .frame .bl{bottom:0;left:0}
   .frame .br{bottom:0;right:0}
-  #sunpath{position:absolute;inset:0;width:100%;height:100%}
+  #sunpath,#blocking{position:absolute;inset:0;width:100%;height:100%}
   .wordmark{display:block;width:min(64vw,420px);height:auto;position:relative;z-index:1}
   .frame .tag{position:relative;z-index:1}
   @media (max-width:699px){
@@ -163,6 +163,15 @@
       <g id="ticks" stroke="#FF9F0A" stroke-opacity=".5" stroke-width="1"></g>
       <circle id="sunnow" r="4.5" fill="none" stroke="#FF9F0A" stroke-width="1.2" visibility="hidden"/>
       <circle id="sunprev" r="3.5" fill="#FFCC00" visibility="hidden"/>
+    </svg>
+    <svg id="blocking" visibility="hidden">
+      <g id="bgrid" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1"></g>
+      <path id="bbox" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="1.1" visibility="hidden"/>
+      <ellipse id="borbit" fill="none" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="1" stroke-dasharray="3 4" visibility="hidden"/>
+      <circle id="bdot" r="2.6" fill="#FFFFFF" fill-opacity=".9" visibility="hidden"/>
+      <circle id="bpulse" fill="none" stroke="#FFCC00" stroke-width="1.4" visibility="hidden"/>
+      <g id="bfigs" stroke="#64D2FF" stroke-opacity=".9" stroke-width="1.2" fill="none"></g>
+      <g id="bwedge" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1"></g>
     </svg>
   </div>
   <svg class="wordmark" viewBox="0 0 76 20" role="img" aria-label="Ariadne">
@@ -436,13 +445,23 @@
     var ticks = document.getElementById('ticks');
     var nowC = document.getElementById('sunnow');
     var prevC = document.getElementById('sunprev');
+    var bsvg = document.getElementById('blocking');
+    var bgrid = document.getElementById('bgrid');
+    var bbox = document.getElementById('bbox');
+    var borbit = document.getElementById('borbit');
+    var bdot = document.getElementById('bdot');
+    var bpulse = document.getElementById('bpulse');
+    var bfigs = document.getElementById('bfigs');
+    var bwedge = document.getElementById('bwedge');
+    var wm = document.querySelector('.wordmark');
 
-    var RATIOS = [[2.39, '2.39:1'], [1.85, '1.85:1'], [2.76, '2.76:1'], [16/9, '16:9'], [2, '2:1']];
-    var HOLD = 5000, MORPH = 1100;
+    var RATIOS = [2.39, 1.85, 2.76, 16/9, 2];
+    var SUNLEN = 3000, BLOCKLEN = 6000, CYCLE = SUNLEN + BLOCKLEN, MORPH = 700;
 
     var model = dayModel();
-    var idx = 0, phase = 'hold', phaseT0 = 0, fromW = 0, fromH = 0, W = 0, H = 0;
-    var lastMin = -1, lastW = -1, lastH = -1;
+    var t0 = null, W = 0, H = 0;
+    var lastMin = -1, lastW = -1, lastH = -1, lastScene = -1;
+    var bgridLast = '', bfigsLast = '', bwedgeLast = '';
 
     function fit(r){
       var mw = inner.clientWidth, mh = inner.clientHeight - 32;
@@ -472,7 +491,7 @@
       ticks.innerHTML = tk;
     }
 
-    function drawLive(w, h, nowMs){
+    function drawLive(w, h, nowMs, pt){
       var pos = sunPos(new Date(nowMs));
       var nowUp = model.samples.length && nowMs > model.rise && nowMs < model.set;
       if (nowUp){
@@ -480,48 +499,162 @@
         nowC.setAttribute('cy', yOf(Math.max(0, pos.elev), h).toFixed(1));
       }
       var show = nowUp;
-      if (!reduce && model.samples.length){
-        var u = (performance.now() % 45000) / 45000;
-        var pt = model.rise + u * (model.set - model.rise);
+      if (pt !== null && model.samples.length){
         prevC.setAttribute('cx', xOf(pt, w).toFixed(1));
         prevC.setAttribute('cy', yOf(Math.max(0, sunPos(new Date(pt)).elev), h).toFixed(1));
         prevC.setAttribute('visibility', 'visible');
         /* Where previewed and now coincide, only previewed is drawn. */
         if (nowUp && Math.abs(pt - nowMs) < 12e5) show = false;
-      }
+      } else prevC.setAttribute('visibility', 'hidden');
       nowC.setAttribute('visibility', show ? 'visible' : 'hidden');
     }
 
-    function paint(ts){
-      if (phase === 'hold' && ts - phaseT0 > HOLD && !reduce){
-        phase = 'morph'; phaseT0 = ts;
-        fromW = W; fromH = H;
-        idx = (idx + 1) % RATIOS.length;
+    /* Scene two: the blocking, choreographed from the app's own AR flow.
+       The floor maps, the scan box takes its three orbits (chest, eye,
+       knee), two stand-ins place on yellow taps, and the wordmark's A
+       enacts its own meaning: legs extend as the field of view, and the
+       subject line runs through the figures. */
+    function sceneB(st, w, h){
+      bsvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      var vpx = 0.5 * w, vpy = 0.40 * h, yB = 0.95 * h;
+      function gy(f){ return vpy + (yB - vpy) * Math.pow(f, 1.8); }
+      function gx(xb, f){ return vpx + (xb - vpx) * Math.pow(f, 1.8); }
+
+      var g = Math.max(0, Math.min(1, (st - 150) / 750));
+      var NR = 6, NC = 9, out = '';
+      var rows = Math.ceil(g * NR), cols = Math.ceil(g * NC), f0 = 1 / NR;
+      for (var i = 1; i <= rows; i++){
+        var f = i / NR, y = gy(f);
+        out += '<line x1="' + gx(0.02 * w, f).toFixed(1) + '" y1="' + y.toFixed(1) +
+               '" x2="' + gx(0.98 * w, f).toFixed(1) + '" y2="' + y.toFixed(1) + '"/>';
       }
-      var tgt = fit(RATIOS[idx][0]);
-      if (phase === 'morph'){
-        var u = Math.min(1, (ts - phaseT0) / MORPH);
-        W = fromW + (tgt[0] - fromW) * ease(u);
-        H = fromH + (tgt[1] - fromH) * ease(u);
-        if (u >= 1){ phase = 'hold'; phaseT0 = ts; }
+      for (var j = 0; j < cols; j++){
+        var xb = 0.02 * w + j * (0.96 * w) / (NC - 1);
+        out += '<line x1="' + gx(xb, f0).toFixed(1) + '" y1="' + gy(f0).toFixed(1) +
+               '" x2="' + xb.toFixed(1) + '" y2="' + yB.toFixed(1) + '"/>';
+      }
+      if (out !== bgridLast){ bgrid.innerHTML = out; bgridLast = out; }
+
+      var bx = 0.74 * w, bw = Math.max(26, 0.085 * w), bh = Math.max(34, 0.26 * h), by = 0.88 * h;
+      if (st > 950){
+        var c = [[bx - bw / 2, by], [bx + bw / 2, by], [bx + bw / 2, by - bh], [bx - bw / 2, by - bh]];
+        var k = 0.13, d = '';
+        var b = c.map(function(p){ return [p[0] + (vpx - p[0]) * k, p[1] + (vpy - p[1]) * k]; });
+        for (var e = 0; e < 4; e++){
+          var n = (e + 1) % 4;
+          d += 'M' + c[e][0].toFixed(1) + ' ' + c[e][1].toFixed(1) + 'L' + c[n][0].toFixed(1) + ' ' + c[n][1].toFixed(1) +
+               'M' + b[e][0].toFixed(1) + ' ' + b[e][1].toFixed(1) + 'L' + b[n][0].toFixed(1) + ' ' + b[n][1].toFixed(1) +
+               'M' + c[e][0].toFixed(1) + ' ' + c[e][1].toFixed(1) + 'L' + b[e][0].toFixed(1) + ' ' + b[e][1].toFixed(1);
+        }
+        bbox.setAttribute('d', d);
+        bbox.setAttribute('visibility', 'visible');
+      } else bbox.setAttribute('visibility', 'hidden');
+
+      if (st > 1050 && st < 2950){
+        var ot = st - 1050, pass = Math.min(2, Math.floor(ot / 633));
+        var oy = by - bh * [0.55, 0.8, 0.2][pass], orx = bw * 1.5, ory = orx * 0.3;
+        borbit.setAttribute('cx', bx.toFixed(1)); borbit.setAttribute('cy', oy.toFixed(1));
+        borbit.setAttribute('rx', orx.toFixed(1)); borbit.setAttribute('ry', ory.toFixed(1));
+        var a = (ot % 633) / 633 * 2 * Math.PI;
+        bdot.setAttribute('cx', (bx + orx * Math.cos(a)).toFixed(1));
+        bdot.setAttribute('cy', (oy + ory * Math.sin(a)).toFixed(1));
+        borbit.setAttribute('visibility', 'visible'); bdot.setAttribute('visibility', 'visible');
+      } else { borbit.setAttribute('visibility', 'hidden'); bdot.setAttribute('visibility', 'hidden'); }
+
+      var wr = wm.getBoundingClientRect(), vr = vf.getBoundingClientRect();
+      var sx = wr.width / 76, sy2 = wr.height / 20, wx = wr.left - vr.left, wy = wr.top - vr.top;
+      var apex = [wx + 7 * sx, wy + 6.2 * sy2];
+      var ftL = [wx + 2 * sx, wy + 16 * sy2], ftR = [wx + 12 * sx, wy + 16 * sy2];
+      var ys = 0.9 * h;
+      function onLeg(ft){ var k2 = (ys - apex[1]) / (ft[1] - apex[1]); return apex[0] + (ft[0] - apex[0]) * k2; }
+      var xL = onLeg(ftL), xR = onLeg(ftR);
+
+      var fx = [xL + (xR - xL) * 0.3, xL + (xR - xL) * 0.72];
+      var born = [3325, 3775], fo = '', fh = Math.max(18, 0.13 * h);
+      for (var q = 0; q < 2; q++){
+        if (st > born[q]){
+          fo += '<ellipse cx="' + fx[q].toFixed(1) + '" cy="' + ys.toFixed(1) + '" rx="8" ry="2.6"/>' +
+                '<line x1="' + fx[q].toFixed(1) + '" y1="' + ys.toFixed(1) + '" x2="' + fx[q].toFixed(1) + '" y2="' + (ys - fh).toFixed(1) + '"/>' +
+                '<circle cx="' + fx[q].toFixed(1) + '" cy="' + (ys - fh - 4).toFixed(1) + '" r="3"/>';
+        }
+      }
+      if (fo !== bfigsLast){ bfigs.innerHTML = fo; bfigsLast = fo; }
+
+      var pw = -1, pu = 0;
+      if (st > 3050 && st < 3325){ pw = 0; pu = (st - 3050) / 275; }
+      if (st > 3500 && st < 3775){ pw = 1; pu = (st - 3500) / 275; }
+      if (pw >= 0){
+        bpulse.setAttribute('cx', fx[pw].toFixed(1)); bpulse.setAttribute('cy', ys.toFixed(1));
+        bpulse.setAttribute('r', (3 + 13 * pu).toFixed(1));
+        bpulse.setAttribute('stroke-opacity', (1 - pu).toFixed(2));
+        bpulse.setAttribute('visibility', 'visible');
+      } else bpulse.setAttribute('visibility', 'hidden');
+
+      var wo = '';
+      if (st > 4000){
+        var wg = Math.min(1, (st - 4000) / 450);
+        [[ftL, xL], [ftR, xR]].forEach(function(pair){
+          var x2 = pair[0][0] + (pair[1] - pair[0][0]) * wg;
+          var y2 = pair[0][1] + (ys - pair[0][1]) * wg;
+          wo += '<line x1="' + pair[0][0].toFixed(1) + '" y1="' + pair[0][1].toFixed(1) +
+                '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
+        });
+      }
+      if (st > 4550){
+        var sg = Math.min(1, (st - 4550) / 400);
+        var xm = (xL + xR) / 2, half = (xR - xL) / 2 * 1.08 * sg;
+        wo += '<line x1="' + (xm - half).toFixed(1) + '" y1="' + ys.toFixed(1) +
+              '" x2="' + (xm + half).toFixed(1) + '" y2="' + ys.toFixed(1) + '"/>';
+      }
+      if (wo !== bwedgeLast){ bwedge.innerHTML = wo; bwedgeLast = wo; }
+    }
+
+    function paint(ts){
+      if (t0 === null) t0 = ts;
+      var tr = reduce ? 0 : ts - t0;
+      var cyc = Math.floor(tr / CYCLE), within = tr - cyc * CYCLE;
+      var isSun = within < SUNLEN;
+      var st = isSun ? within : within - SUNLEN;
+      var scene = cyc * 2 + (isSun ? 0 : 1);
+      var type = reduce ? 0 : (isSun ? 0 : 1);
+      var rIdx = scene % RATIOS.length;
+      var tgt = fit(RATIOS[rIdx]);
+      if (!reduce && scene > 0 && st < MORPH){
+        var prev = fit(RATIOS[(rIdx + RATIOS.length - 1) % RATIOS.length]);
+        var u = ease(st / MORPH);
+        W = prev[0] + (tgt[0] - prev[0]) * u;
+        H = prev[1] + (tgt[1] - prev[1]) * u;
       } else { W = tgt[0]; H = tgt[1]; }
       vf.style.width = W.toFixed(1) + 'px';
       vf.style.height = H.toFixed(1) + 'px';
 
-      var nowMs = Date.now(), min = Math.floor(nowMs / 6e4);
-      if (min !== lastMin && nowMs > model.day + 864e5) model = dayModel();
-      if (Math.abs(W - lastW) > 0.5 || Math.abs(H - lastH) > 0.5 || min !== lastMin){
-        drawDay(W, H); lastW = W; lastH = H;
+      svg.setAttribute('visibility', type === 0 ? 'visible' : 'hidden');
+      bsvg.setAttribute('visibility', type === 0 ? 'hidden' : 'visible');
+
+      if (type === 0){
+        var nowMs = Date.now(), min = Math.floor(nowMs / 6e4);
+        if (min !== lastMin && nowMs > model.day + 864e5) model = dayModel();
+        if (Math.abs(W - lastW) > 0.5 || Math.abs(H - lastH) > 0.5 || min !== lastMin || lastScene !== scene){
+          drawDay(W, H); lastW = W; lastH = H;
+        }
+        var pt = null;
+        if (!reduce && model.samples.length){
+          var p = Math.max(0, Math.min(1, (st - 300) / (SUNLEN - 600)));
+          pt = model.rise + p * (model.set - model.rise);
+        }
+        drawLive(W, H, nowMs, pt);
+        lastMin = min;
+      } else {
+        sceneB(st, W, H);
       }
-      drawLive(W, H, nowMs);
-      lastMin = min;
+      lastScene = scene;
     }
 
     var running = false, raf = 0, tick = 0;
     function loop(ts){ if (!running) return; paint(ts); raf = requestAnimationFrame(loop); }
     function start(){
       if (running) return;
-      running = true; phaseT0 = performance.now();
+      running = true; t0 = null;
       if (reduce){
         paint(performance.now());
         tick = setInterval(function(){ paint(performance.now()); }, 30000);
@@ -534,7 +667,7 @@
       cancelAnimationFrame(raf); clearInterval(tick);
     }
 
-    var s0 = fit(RATIOS[0][0]); W = s0[0]; H = s0[1];
+    var s0 = fit(RATIOS[0]); W = s0[0]; H = s0[1];
 
     if ('IntersectionObserver' in window){
       new IntersectionObserver(function(en){ en[0].isIntersecting ? start() : stop(); }).observe(inner);
