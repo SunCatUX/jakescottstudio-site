@@ -61,17 +61,6 @@
   .frame .bl{bottom:0;left:0}
   .frame .br{bottom:0;right:0}
   #sunpath{position:absolute;inset:0;width:100%;height:100%}
-  #sunpath text{
-    font-family:var(--mono);font-size:10px;letter-spacing:.1em;
-    fill:var(--faint);
-  }
-  .vf-read{
-    position:absolute;bottom:10px;
-    font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;
-    color:var(--faint);white-space:nowrap;
-  }
-  #ratio{left:34px}
-  #solar{right:34px}
   .wordmark{display:block;width:min(64vw,420px);height:auto;position:relative;z-index:1}
   .frame .tag{position:relative;z-index:1}
   @media (max-width:699px){
@@ -172,13 +161,9 @@
     <svg id="sunpath">
       <path id="arcline" fill="none" stroke="#FF9F0A" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="4 5"/>
       <g id="ticks" stroke="#FF9F0A" stroke-opacity=".5" stroke-width="1"></g>
-      <text id="risetxt" text-anchor="start"></text>
-      <text id="settxt" text-anchor="end"></text>
       <circle id="sunnow" r="4.5" fill="none" stroke="#FF9F0A" stroke-width="1.2" visibility="hidden"/>
       <circle id="sunprev" r="3.5" fill="#FFCC00" visibility="hidden"/>
     </svg>
-    <div id="ratio" class="vf-read"></div>
-    <div id="solar" class="vf-read"></div>
   </div>
   <svg class="wordmark" viewBox="0 0 76 20" role="img" aria-label="Ariadne">
     <g stroke="#FFFFFF" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -388,13 +373,10 @@
       'Australia/Sydney':[-33.9,151.2],'Australia/Melbourne':[-37.8,145.0],'Australia/Brisbane':[-27.5,153.0],
       'Australia/Perth':[-31.9,115.9],'Australia/Adelaide':[-34.9,138.6],'Pacific/Auckland':[-36.8,174.8]
     };
-    var ZONE = 'Europe/London', LAT = 51.5, LON = -0.1, CITY = 'LONDON';
+    var ZONE = 'Europe/London', LAT = 51.5, LON = -0.1;
     try {
       var vtz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (TZ[vtz]){
-        ZONE = vtz; LAT = TZ[vtz][0]; LON = TZ[vtz][1];
-        CITY = vtz.split('/').pop().replace(/_/g, ' ').toUpperCase();
-      }
+      if (TZ[vtz]){ ZONE = vtz; LAT = TZ[vtz][0]; LON = TZ[vtz][1]; }
     } catch(e){}
 
     /* Solar position, standard low-precision ephemeris (good to ~0.1 deg). */
@@ -412,8 +394,6 @@
       var az = Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(la) - Math.tan(dec) * Math.cos(la));
       return { elev: elev / RAD, az: (az / RAD + 180 + 360) % 360 };
     }
-
-    var fmtHM = new Intl.DateTimeFormat('en-GB', { timeZone: ZONE, hour: '2-digit', minute: '2-digit', hour12: false });
 
     /* Midnight UTC of the reference city's current civil date. */
     function zoneMidnight(){
@@ -454,12 +434,8 @@
     var svg = document.getElementById('sunpath');
     var arc = document.getElementById('arcline');
     var ticks = document.getElementById('ticks');
-    var riseT = document.getElementById('risetxt');
-    var setT = document.getElementById('settxt');
     var nowC = document.getElementById('sunnow');
     var prevC = document.getElementById('sunprev');
-    var ratioEl = document.getElementById('ratio');
-    var solarEl = document.getElementById('solar');
 
     var RATIOS = [[2.39, '2.39:1'], [1.85, '1.85:1'], [2.76, '2.76:1'], [16/9, '16:9'], [2, '2:1']];
     var HOLD = 5000, MORPH = 1100;
@@ -494,16 +470,10 @@
         tk += '<line x1="' + x + '" y1="' + (y - 3).toFixed(1) + '" x2="' + x + '" y2="' + (y + 3).toFixed(1) + '"/>';
       });
       ticks.innerHTML = tk;
-      var ty = (0.58 * h + 16).toFixed(1);
-      riseT.setAttribute('x', (0.07 * w).toFixed(1)); riseT.setAttribute('y', ty);
-      setT.setAttribute('x', (0.93 * w).toFixed(1)); setT.setAttribute('y', ty);
-      riseT.textContent = fmtHM.format(model.rise);
-      setT.textContent = fmtHM.format(model.set);
     }
 
     function drawLive(w, h, nowMs){
       var pos = sunPos(new Date(nowMs));
-      solarEl.textContent = CITY + ' · SUN ' + Math.round(pos.az) + '° ' + (pos.elev >= 0 ? '+' : '') + Math.round(pos.elev) + '°';
       var nowUp = model.samples.length && nowMs > model.rise && nowMs < model.set;
       if (nowUp){
         nowC.setAttribute('cx', xOf(nowMs, w).toFixed(1));
@@ -527,7 +497,6 @@
         phase = 'morph'; phaseT0 = ts;
         fromW = W; fromH = H;
         idx = (idx + 1) % RATIOS.length;
-        ratioEl.textContent = RATIOS[idx][1];
       }
       var tgt = fit(RATIOS[idx][0]);
       if (phase === 'morph'){
@@ -565,7 +534,6 @@
       cancelAnimationFrame(raf); clearInterval(tick);
     }
 
-    ratioEl.textContent = RATIOS[0][1];
     var s0 = fit(RATIOS[0][0]); W = s0[0]; H = s0[1];
 
     if ('IntersectionObserver' in window){
