@@ -141,10 +141,7 @@
     <svg class="bracket bl" viewBox="0 0 30 30"><path d="M 12 28 L 6 28 A 4 4 0 0 1 2 24 L 2 18"/></svg>
     <svg class="bracket br" viewBox="0 0 30 30"><path d="M 18 28 L 24 28 A 4 4 0 0 0 28 24 L 28 18"/></svg>
     <svg id="reel">
-      <path id="bbox" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="1.1" visibility="hidden"/>
-      <circle id="bdot" r="2.6" fill="#FFFFFF" fill-opacity=".9" visibility="hidden"/>
-      <g id="bfigs" stroke="#64D2FF" stroke-opacity=".9" stroke-width="1.2" fill="none"></g>
-      <g id="bwedge" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1"></g>
+      <g id="bgrid" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1"></g>
       <path id="lr" fill="none" stroke="#FF453A" stroke-opacity=".75" stroke-width="1.3" visibility="hidden"/>
       <path id="lb" fill="none" stroke="#0A84FF" stroke-opacity=".75" stroke-width="1.3" visibility="hidden"/>
       <path id="theline" fill="none" stroke="#FF9F0A" stroke-opacity=".6" stroke-width="1.3" stroke-dasharray="4 5"/>
@@ -433,15 +430,11 @@
     var mret = document.getElementById('mret');
     var mretc = document.getElementById('mretc');
     var mretd = document.getElementById('mretd');
-    var bbox = document.getElementById('bbox');
-    var bdot = document.getElementById('bdot');
-    var bfigs = document.getElementById('bfigs');
-    var bwedge = document.getElementById('bwedge');
-    var wm = document.querySelector('.wordmark');
+    var bgrid = document.getElementById('bgrid');
 
     var model = dayModel();
     var t0 = null, W = 0, H = 0, lastMin = -1;
-    var ticksLast = '', bfigsLast = '', bwedgeLast = '';
+    var ticksLast = '', bgridLast = '';
 
     /* The reel: holds and morphs. One ratio per cycle, re-framed during
        the rebirth at the end. */
@@ -452,7 +445,7 @@
       { from: 1, to: 2, len: 1200 },
       { state: 2, len: 5000 },
       { from: 2, to: 3, len: 1200 },
-      { state: 3, len: 5600 },
+      { state: 3, len: 5000 },
       { from: 3, to: 0, len: 1400 }
     ];
     var TOTAL = 0;
@@ -479,9 +472,10 @@
       var m = (1 - Math.cos(u * Math.PI)) / 2;
       return LBASE[seg] + (LBASE[seg + 1] - LBASE[seg]) * m;
     }
+    /* A long, slow swell: alive, never noisy. */
     function breath(xn, h, t){
-      return h * (0.011 * Math.sin(9.4 * xn - 1.3 * t)
-                + 0.007 * Math.sin(4.7 * xn + 0.7 * t + 1.7)) * Math.sin(Math.PI * xn);
+      return h * (0.008 * Math.sin(5.2 * xn - 0.9 * t)
+                + 0.005 * Math.sin(2.6 * xn + 0.55 * t + 1.7)) * Math.sin(Math.PI * xn);
     }
     function lineXY(state, xn, w, h, t){
       var x, y;
@@ -538,10 +532,7 @@
     function hideLook(){ lr.setAttribute('visibility', 'hidden'); lb.setAttribute('visibility', 'hidden'); }
     function hideMeter(){ mret.setAttribute('visibility', 'hidden'); mneedle.setAttribute('visibility', 'hidden'); }
     function hideBlock(){
-      if (bfigsLast !== ''){ bfigs.innerHTML = ''; bfigsLast = ''; }
-      if (bwedgeLast !== ''){ bwedge.innerHTML = ''; bwedgeLast = ''; }
-      bbox.setAttribute('visibility', 'hidden');
-      bdot.setAttribute('visibility', 'hidden');
+      if (bgridLast !== ''){ bgrid.innerHTML = ''; bgridLast = ''; }
     }
     function hideAll(){ hideSun(); hideLook(); hideMeter(); hideBlock(); setTicks('', '#FFFFFF'); }
 
@@ -634,82 +625,33 @@
       } else hideMeter();
     }
 
-    /* State 3, the blocking, distilled: on the line, the scanning dot
-       draws a double as a spine and three contours, one stand-in grows
-       beside it, and the A's legs land on the line to frame them both.
-       The line is the stage and the subject line. */
+    /* State 3, the stage: the wireframe floor scans out of the line toward
+       the horizon, holds, and scans back in. Nothing else. The columns
+       stand on the breathing line. */
     function dressBlock(st, len, w, h, t){
-      var out = outEnv(st, len);
-      var wr = wm.getBoundingClientRect(), vr = vf.getBoundingClientRect();
-      var sx = wr.width / 76, sy2 = wr.height / 20, wx2 = wr.left - vr.left, wy2 = wr.top - vr.top;
-      var apex = [wx2 + 7 * sx, wy2 + 6.2 * sy2];
-      var ftL = [wx2 + 2 * sx, wy2 + 16 * sy2], ftR = [wx2 + 12 * sx, wy2 + 16 * sy2];
-      function onLeg(ft){ var k2 = (0.88 * h - apex[1]) / (ft[1] - apex[1]); return apex[0] + (ft[0] - apex[0]) * k2; }
-      var xL = onLeg(ftL), xR = onLeg(ftR);
-      function onLine(x){ return lineXY(3, clamp01((x - 0.06 * w) / (0.88 * w)), w, h, t); }
-
-      /* The scan: the dot draws the double, chest, eye, knee. */
-      var scX = xL + (xR - xL) * 0.66, base = onLine(scX);
-      var S = Math.min(grow(st, 300, 300), out);
-      var shF = Math.max(30, 0.20 * h), rxF = Math.max(12, 0.05 * w);
-      var HTS = [0.55, 0.8, 0.2];
-      if (S > 0.01){
-        var d2 = 'M' + base[0].toFixed(1) + ' ' + base[1].toFixed(1) +
-                 'L' + base[0].toFixed(1) + ' ' + (base[1] - shF * S).toFixed(1);
-        var rx3 = rxF * out, ry3 = rx3 * 0.32;
-        var scanT = st - 700, dotOn = false, dx3 = 0, dy3 = 0;
-        for (var p2 = 0; p2 < 3; p2++){
-          var pt2 = scanT - p2 * 700;
-          if (pt2 <= 0) break;
-          var aMax = Math.min(1, pt2 / 700) * 2 * Math.PI;
-          var cyR = base[1] - shF * HTS[p2] * out;
-          var steps = Math.max(2, Math.ceil(aMax / (Math.PI / 12)));
-          for (var q3 = 0; q3 <= steps; q3++){
-            var a3 = aMax * q3 / steps;
-            var px3 = base[0] + rx3 * Math.cos(a3), py3 = cyR + ry3 * Math.sin(a3);
-            d2 += (q3 ? 'L' : 'M') + px3.toFixed(1) + ' ' + py3.toFixed(1);
-            if (pt2 < 700 && q3 === steps){ dotOn = true; dx3 = px3; dy3 = py3; }
-          }
+      var vpx = 0.5 * w, vpy = 0.40 * h;
+      var G = Math.min(grow(st, 400, 1200), clamp01((len - 400 - st) / 1200));
+      G = G * G * (3 - 2 * G);
+      var o = '';
+      if (G > 0.005){
+        var NR = 5, NC = 9, f0 = 1 / NR;
+        var gy = function(f){ return vpy + (0.88 * h - vpy) * Math.pow(f, 1.8); };
+        var gx = function(xb, f){ return vpx + (xb - vpx) * Math.pow(f, 1.8); };
+        for (var i = 1; i < NR; i++){
+          if (G < i / NR) break;
+          var f = 1 - i * (1 - f0) / NR;
+          o += '<line x1="' + gx(0.06 * w, f).toFixed(1) + '" y1="' + gy(f).toFixed(1) +
+               '" x2="' + gx(0.94 * w, f).toFixed(1) + '" y2="' + gy(f).toFixed(1) + '"/>';
         }
-        if (st > 2900 && out > 0.5){
-          var hy3 = base[1] - shF * out - 5 * out;
-          for (var q4 = 0; q4 <= 12; q4++){
-            var a4 = 2 * Math.PI * q4 / 12;
-            d2 += (q4 ? 'L' : 'M') + (base[0] + 3 * Math.cos(a4)).toFixed(1) + ' ' + (hy3 + 3 * Math.sin(a4)).toFixed(1);
-          }
+        for (var j = 0; j < NC; j++){
+          var xb = 0.06 * w + j * (0.88 * w) / (NC - 1);
+          var bp = lineXY(3, j / (NC - 1), w, h, t);
+          var ex = bp[0] + (gx(xb, f0) - bp[0]) * G, ey = bp[1] + (gy(f0) - bp[1]) * G;
+          o += '<line x1="' + bp[0].toFixed(1) + '" y1="' + bp[1].toFixed(1) +
+               '" x2="' + ex.toFixed(1) + '" y2="' + ey.toFixed(1) + '"/>';
         }
-        bbox.setAttribute('d', d2);
-        bbox.setAttribute('visibility', 'visible');
-        if (dotOn){
-          bdot.setAttribute('cx', dx3.toFixed(1)); bdot.setAttribute('cy', dy3.toFixed(1));
-          bdot.setAttribute('visibility', 'visible');
-        } else bdot.setAttribute('visibility', 'hidden');
-      } else { bbox.setAttribute('visibility', 'hidden'); bdot.setAttribute('visibility', 'hidden'); }
-
-      /* One stand-in grows on the line beside the double. */
-      var fX = xL + (xR - xL) * 0.32, fp = onLine(fX);
-      var F = Math.min(grow(st, 3100, 300), out), fo = '', fhF = Math.max(18, 0.13 * h);
-      if (F > 0.01){
-        var fh2 = fhF * F;
-        fo = '<ellipse cx="' + fp[0].toFixed(1) + '" cy="' + fp[1].toFixed(1) + '" rx="' + (8 * F).toFixed(1) + '" ry="' + (2.6 * F).toFixed(1) + '"/>' +
-             '<line x1="' + fp[0].toFixed(1) + '" y1="' + fp[1].toFixed(1) + '" x2="' + fp[0].toFixed(1) + '" y2="' + (fp[1] - fh2).toFixed(1) + '"/>' +
-             '<circle cx="' + fp[0].toFixed(1) + '" cy="' + (fp[1] - fh2 - 4 * F).toFixed(1) + '" r="' + (3 * F).toFixed(1) + '"/>';
       }
-      if (fo !== bfigsLast){ bfigs.innerHTML = fo; bfigsLast = fo; }
-
-      /* The A frames them: its legs land on the line. */
-      var wo = '';
-      var WG = Math.min(grow(st, 3700, 700), out);
-      if (WG > 0.01){
-        [[ftL, xL], [ftR, xR]].forEach(function(pair){
-          var end = onLine(pair[1]);
-          var x2 = pair[0][0] + (end[0] - pair[0][0]) * WG;
-          var y2 = pair[0][1] + (end[1] - pair[0][1]) * WG;
-          wo += '<line x1="' + pair[0][0].toFixed(1) + '" y1="' + pair[0][1].toFixed(1) +
-                '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
-        });
-      }
-      if (wo !== bwedgeLast){ bwedge.innerHTML = wo; bwedgeLast = wo; }
+      if (o !== bgridLast){ bgrid.innerHTML = o; bgridLast = o; }
     }
 
     function paint(ts){
