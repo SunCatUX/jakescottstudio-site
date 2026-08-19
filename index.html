@@ -141,7 +141,6 @@
     <svg class="bracket bl" viewBox="0 0 30 30"><path d="M 12 28 L 6 28 A 4 4 0 0 1 2 24 L 2 18"/></svg>
     <svg class="bracket br" viewBox="0 0 30 30"><path d="M 18 28 L 24 28 A 4 4 0 0 0 28 24 L 28 18"/></svg>
     <svg id="reel">
-      <g id="bgrid" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1"></g>
       <path id="bbox" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="1.1" visibility="hidden"/>
       <circle id="bdot" r="2.6" fill="#FFFFFF" fill-opacity=".9" visibility="hidden"/>
       <g id="bfigs" stroke="#64D2FF" stroke-opacity=".9" stroke-width="1.2" fill="none"></g>
@@ -434,29 +433,27 @@
     var mret = document.getElementById('mret');
     var mretc = document.getElementById('mretc');
     var mretd = document.getElementById('mretd');
-    var bgrid = document.getElementById('bgrid');
     var bbox = document.getElementById('bbox');
     var bdot = document.getElementById('bdot');
     var bfigs = document.getElementById('bfigs');
     var bwedge = document.getElementById('bwedge');
     var wm = document.querySelector('.wordmark');
 
-    var RATIOS = [2.39, 1.85, 2.76, 16/9, 2];
     var model = dayModel();
     var t0 = null, W = 0, H = 0, lastMin = -1;
-    var ticksLast = '', bgridLast = '', bfigsLast = '', bwedgeLast = '';
+    var ticksLast = '', bfigsLast = '', bwedgeLast = '';
 
     /* The reel: holds and morphs. One ratio per cycle, re-framed during
        the rebirth at the end. */
     var SEG = [
       { state: 0, len: 4000 },
-      { from: 0, to: 1, len: 900 },
+      { from: 0, to: 1, len: 1200 },
       { state: 1, len: 5000 },
-      { from: 1, to: 2, len: 900 },
+      { from: 1, to: 2, len: 1200 },
       { state: 2, len: 5000 },
-      { from: 2, to: 3, len: 900 },
-      { state: 3, len: 6000 },
-      { from: 3, to: 0, len: 1100 }
+      { from: 2, to: 3, len: 1200 },
+      { state: 3, len: 5600 },
+      { from: 3, to: 0, len: 1400 }
     ];
     var TOTAL = 0;
     SEG.forEach(function(s){ TOTAL += s.len; });
@@ -473,35 +470,43 @@
     /* Whatever emanates from the line returns to it before each morph. */
     function outEnv(st, len){ return clamp01((len - st) / 350); }
 
-    /* The line's four shapes. */
+    /* The line's four shapes, all carrying the same breath: a soft
+       two-frequency ripple, pinned at the ends, alive in every state and
+       every morph. Everything anchored to the line samples it here. */
     var LBASE = [0.03, 0.14, 0.36, 0.62, 0.84, 0.95];
     function baseY(xn){
       var seg = Math.min(4, Math.floor(xn * 5)), u = xn * 5 - seg;
       var m = (1 - Math.cos(u * Math.PI)) / 2;
       return LBASE[seg] + (LBASE[seg + 1] - LBASE[seg]) * m;
     }
-    function sunXY(xn, w, h){
-      var x = 0.07 * w + xn * 0.86 * w, y = 0.5 * h;
-      if (model.samples.length){
-        var tm = model.rise + xn * (model.set - model.rise);
-        var e = Math.max(0, sunPos(new Date(tm)).elev);
-        y = 0.58 * h - (e / model.maxE) * 0.42 * h;
-      }
-      return [x, y];
+    function breath(xn, h, t){
+      return h * (0.011 * Math.sin(9.4 * xn - 1.3 * t)
+                + 0.007 * Math.sin(4.7 * xn + 0.7 * t + 1.7)) * Math.sin(Math.PI * xn);
     }
-    function lookY(xn, h, t, ph){
-      return 0.78 * h - 0.56 * h * baseY(xn)
-        + 0.56 * h * 0.018 * Math.sin(15.7 * xn - 2.2 * t + ph * 0.4) * Math.sin(Math.PI * xn);
+    function lineXY(state, xn, w, h, t){
+      var x, y;
+      if (state === 0){
+        x = 0.07 * w + xn * 0.86 * w;
+        y = 0.5 * h;
+        if (model.samples.length){
+          var tm = model.rise + xn * (model.set - model.rise);
+          y = 0.58 * h - (Math.max(0, sunPos(new Date(tm)).elev) / model.maxE) * 0.42 * h;
+        }
+      } else if (state === 1){
+        x = 0.12 * w + xn * 0.76 * w;
+        y = 0.78 * h - 0.56 * h * baseY(xn);
+      } else if (state === 2){
+        x = 0.30 * w + xn * 0.40 * w;
+        y = 0.72 * h;
+      } else {
+        x = 0.06 * w + xn * 0.88 * w;
+        y = 0.88 * h;
+      }
+      return [x, y + breath(xn, h, t)];
     }
     function linePts(state, w, h, t){
       var pts = [];
-      for (var i = 0; i <= N; i++){
-        var xn = i / N;
-        if (state === 0) pts.push(sunXY(xn, w, h));
-        else if (state === 1) pts.push([0.12 * w + xn * 0.76 * w, lookY(xn, h, t, 0)]);
-        else if (state === 2) pts.push([0.30 * w + xn * 0.40 * w, 0.72 * h]);
-        else pts.push([0.06 * w + xn * 0.88 * w, 0.88 * h]);
-      }
+      for (var i = 0; i <= N; i++) pts.push(lineXY(state, i / N, w, h, t));
       return pts;
     }
     function pathOf(pts){
@@ -533,7 +538,6 @@
     function hideLook(){ lr.setAttribute('visibility', 'hidden'); lb.setAttribute('visibility', 'hidden'); }
     function hideMeter(){ mret.setAttribute('visibility', 'hidden'); mneedle.setAttribute('visibility', 'hidden'); }
     function hideBlock(){
-      if (bgridLast !== ''){ bgrid.innerHTML = ''; bgridLast = ''; }
       if (bfigsLast !== ''){ bfigs.innerHTML = ''; bfigsLast = ''; }
       if (bwedgeLast !== ''){ bwedge.innerHTML = ''; bwedgeLast = ''; }
       bbox.setAttribute('visibility', 'hidden');
@@ -543,7 +547,7 @@
 
     /* State 0, the sun: hour ticks live on the line, the previewed-time
        dot sweeps the day, the now circle sits where the sun really is. */
-    function dressSun(st, len, w, h){
+    function dressSun(st, len, w, h, t){
       var nowMs = Date.now(), min = Math.floor(nowMs / 6e4);
       if (min !== lastMin && nowMs > model.day + 864e5) model = dayModel();
       lastMin = min;
@@ -552,7 +556,7 @@
       if (model.samples.length && e > 0){
         model.hours.forEach(function(hp){
           var xn = (hp[0] - model.rise) / (model.set - model.rise);
-          var p = sunXY(xn, w, h), l = 3 * e;
+          var p = lineXY(0, xn, w, h, t), l = 3 * e;
           tk += '<line x1="' + p[0].toFixed(1) + '" y1="' + (p[1] - l).toFixed(1) +
                 '" x2="' + p[0].toFixed(1) + '" y2="' + (p[1] + l).toFixed(1) + '"/>';
         });
@@ -560,13 +564,13 @@
       setTicks(tk, '#FF9F0A');
       var show = false;
       if (model.samples.length && nowMs > model.rise && nowMs < model.set){
-        var pn = sunXY((nowMs - model.rise) / (model.set - model.rise), w, h);
+        var pn = lineXY(0, (nowMs - model.rise) / (model.set - model.rise), w, h, t);
         nowC.setAttribute('cx', pn[0].toFixed(1)); nowC.setAttribute('cy', pn[1].toFixed(1));
         show = true;
       }
       if (!reduce && model.samples.length){
         var u = clamp01((st - 200) / (len - 500));
-        var pp = sunXY(u, w, h);
+        var pp = lineXY(0, u, w, h, t);
         prevC.setAttribute('cx', pp[0].toFixed(1)); prevC.setAttribute('cy', pp[1].toFixed(1));
         prevC.setAttribute('visibility', 'visible');
         /* Where previewed and now coincide, only previewed is drawn. */
@@ -585,9 +589,9 @@
         var d = '';
         for (var i = 0; i <= N; i++){
           var xn = i / N;
+          var p = lineXY(1, xn, w, h, t);
           var off = D * 0.039 * h * (0.55 + 0.45 * Math.sin(8.2 * xn + ph + 0.5 * Math.sin(0.9 * t + ph))) * Math.sin(Math.PI * xn);
-          d += (i ? 'L' : 'M') + (0.12 * w + xn * 0.76 * w).toFixed(1) + ' ' +
-               (lookY(xn, h, t, ph) + sign * off).toFixed(1);
+          d += (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + (p[1] + sign * off).toFixed(1);
         }
         return d;
       }
@@ -597,15 +601,14 @@
 
     /* State 2, the meter: stop ticks grow out of the line, the reticle
        drifts out of it to sweep and returns, the needle rides the line. */
-    function dressMeter(st, len, w, h){
+    function dressMeter(st, len, w, h, t){
       var e = Math.min(grow(st, 100, 300), outEnv(st, len));
-      var x0 = 0.30 * w, x1 = 0.70 * w, y = 0.72 * h;
       var tk = '';
       if (e > 0){
         for (var j = 0; j <= 6; j++){
-          var tx = x0 + j * (x1 - x0) / 6, l = (j === 3 ? 7 : 4.5) * e;
-          tk += '<line x1="' + tx.toFixed(1) + '" y1="' + (y - l).toFixed(1) +
-                '" x2="' + tx.toFixed(1) + '" y2="' + (y + l).toFixed(1) + '"/>';
+          var p = lineXY(2, j / 6, w, h, t), l = (j === 3 ? 7 : 4.5) * e;
+          tk += '<line x1="' + p[0].toFixed(1) + '" y1="' + (p[1] - l).toFixed(1) +
+                '" x2="' + p[0].toFixed(1) + '" y2="' + (p[1] + l).toFixed(1) + '"/>';
         }
       }
       setTicks(tk, '#FFFFFF');
@@ -613,76 +616,66 @@
       we = we * we * (3 - 2 * we);
       if (we > 0.01){
         var tt = st / 1000;
+        var anchor = lineXY(2, 0.5, w, h, t);
         var wx = 0.5 * w + 0.30 * w * Math.sin(0.8 * tt + 0.6);
         var wy = 0.44 * h + 0.26 * h * Math.sin(1.27 * tt + 2.1);
-        var cx = 0.5 * w + (wx - 0.5 * w) * we;
-        var cy = y + (wy - y) * we;
+        var cx = anchor[0] + (wx - anchor[0]) * we;
+        var cy = anchor[1] + (wy - anchor[1]) * we;
         mretc.setAttribute('cx', cx.toFixed(1)); mretc.setAttribute('cy', cy.toFixed(1));
         mretc.setAttribute('r', (14 * Math.min(1, we * 2)).toFixed(1));
         mretd.setAttribute('cx', cx.toFixed(1)); mretd.setAttribute('cy', cy.toFixed(1));
         mret.setAttribute('visibility', 'visible');
         /* One reading: height in frame maps to the stop on the line. */
         var v = clamp01((0.74 * h - cy) / (0.56 * h));
-        var nx = x0 + v * (x1 - x0);
-        mneedle.setAttribute('x1', nx.toFixed(1)); mneedle.setAttribute('x2', nx.toFixed(1));
-        mneedle.setAttribute('y1', (y - 9).toFixed(1)); mneedle.setAttribute('y2', (y + 9).toFixed(1));
+        var np = lineXY(2, v, w, h, t);
+        mneedle.setAttribute('x1', np[0].toFixed(1)); mneedle.setAttribute('x2', np[0].toFixed(1));
+        mneedle.setAttribute('y1', (np[1] - 9).toFixed(1)); mneedle.setAttribute('y2', (np[1] + 9).toFixed(1));
         mneedle.setAttribute('visibility', 'visible');
       } else hideMeter();
     }
 
-    /* State 3, the blocking: the grid extrudes from the line, the scan box
-       rises from the ground and takes its three orbits, the stand-ins grow
-       on the line, and the A frames them. The line is the subject line. */
-    function dressBlock(st, len, w, h){
-      var yL = 0.88 * h, vpx = 0.5 * w, vpy = 0.40 * h;
+    /* State 3, the blocking, distilled: on the line, the scanning dot
+       draws a double as a spine and three contours, one stand-in grows
+       beside it, and the A's legs land on the line to frame them both.
+       The line is the stage and the subject line. */
+    function dressBlock(st, len, w, h, t){
       var out = outEnv(st, len);
-      function gy(f){ return vpy + (yL - vpy) * Math.pow(f, 1.8); }
-      function gx(xb, f){ return vpx + (xb - vpx) * Math.pow(f, 1.8); }
-      var G = Math.min(grow(st, 100, 800), out);
-      var NR = 5, NC = 9, f0 = 1 / NR, o = '';
-      for (var i = 1; i < NR; i++){
-        if (G < i / NR) break;
-        var f = 1 - i * (1 - f0) / NR;
-        o += '<line x1="' + gx(0.06 * w, f).toFixed(1) + '" y1="' + gy(f).toFixed(1) +
-             '" x2="' + gx(0.94 * w, f).toFixed(1) + '" y2="' + gy(f).toFixed(1) + '"/>';
-      }
-      for (var j = 0; j < NC; j++){
-        if (G <= 0) break;
-        var xb = 0.06 * w + j * (0.88 * w) / (NC - 1);
-        var ex = xb + (gx(xb, f0) - xb) * G, ey = yL + (gy(f0) - yL) * G;
-        o += '<line x1="' + xb.toFixed(1) + '" y1="' + yL.toFixed(1) +
-             '" x2="' + ex.toFixed(1) + '" y2="' + ey.toFixed(1) + '"/>';
-      }
-      if (o !== bgridLast){ bgrid.innerHTML = o; bgridLast = o; }
+      var wr = wm.getBoundingClientRect(), vr = vf.getBoundingClientRect();
+      var sx = wr.width / 76, sy2 = wr.height / 20, wx2 = wr.left - vr.left, wy2 = wr.top - vr.top;
+      var apex = [wx2 + 7 * sx, wy2 + 6.2 * sy2];
+      var ftL = [wx2 + 2 * sx, wy2 + 16 * sy2], ftR = [wx2 + 12 * sx, wy2 + 16 * sy2];
+      function onLeg(ft){ var k2 = (0.88 * h - apex[1]) / (ft[1] - apex[1]); return apex[0] + (ft[0] - apex[0]) * k2; }
+      var xL = onLeg(ftL), xR = onLeg(ftR);
+      function onLine(x){ return lineXY(3, clamp01((x - 0.06 * w) / (0.88 * w)), w, h, t); }
 
-      /* The scan: a spine grows from the line, and the scanning dot draws
-         its three orbit rings around it, chest, eye, knee. What remains is
-         the scanned double: a spine and three contours. */
-      var S = Math.min(grow(st, 1000, 300), out);
-      var sx3 = 0.72 * w, shF = Math.max(30, 0.20 * h), rxF = Math.max(12, 0.05 * w);
+      /* The scan: the dot draws the double, chest, eye, knee. */
+      var scX = xL + (xR - xL) * 0.66, base = onLine(scX);
+      var S = Math.min(grow(st, 300, 300), out);
+      var shF = Math.max(30, 0.20 * h), rxF = Math.max(12, 0.05 * w);
       var HTS = [0.55, 0.8, 0.2];
       if (S > 0.01){
-        var d2 = 'M' + sx3.toFixed(1) + ' ' + yL.toFixed(1) + 'L' + sx3.toFixed(1) + ' ' + (yL - shF * S).toFixed(1);
+        var d2 = 'M' + base[0].toFixed(1) + ' ' + base[1].toFixed(1) +
+                 'L' + base[0].toFixed(1) + ' ' + (base[1] - shF * S).toFixed(1);
         var rx3 = rxF * out, ry3 = rx3 * 0.32;
-        var scanT = st - 1400, dotOn = false, dx3 = 0, dy3 = 0;
+        var scanT = st - 700, dotOn = false, dx3 = 0, dy3 = 0;
         for (var p2 = 0; p2 < 3; p2++){
           var pt2 = scanT - p2 * 700;
           if (pt2 <= 0) break;
           var aMax = Math.min(1, pt2 / 700) * 2 * Math.PI;
-          var cyR = yL - shF * HTS[p2] * out;
+          var cyR = base[1] - shF * HTS[p2] * out;
           var steps = Math.max(2, Math.ceil(aMax / (Math.PI / 12)));
           for (var q3 = 0; q3 <= steps; q3++){
             var a3 = aMax * q3 / steps;
-            var px3 = sx3 + rx3 * Math.cos(a3), py3 = cyR + ry3 * Math.sin(a3);
-            d2 += (q3 ? 'L' : 'M' ) + px3.toFixed(1) + ' ' + py3.toFixed(1);
+            var px3 = base[0] + rx3 * Math.cos(a3), py3 = cyR + ry3 * Math.sin(a3);
+            d2 += (q3 ? 'L' : 'M') + px3.toFixed(1) + ' ' + py3.toFixed(1);
             if (pt2 < 700 && q3 === steps){ dotOn = true; dx3 = px3; dy3 = py3; }
           }
         }
-        if (st > 3600 && out > 0.5){
-          var hy3 = yL - shF * out - 5 * out;
+        if (st > 2900 && out > 0.5){
+          var hy3 = base[1] - shF * out - 5 * out;
           for (var q4 = 0; q4 <= 12; q4++){
             var a4 = 2 * Math.PI * q4 / 12;
-            d2 += (q4 ? 'L' : 'M') + (sx3 + 3 * Math.cos(a4)).toFixed(1) + ' ' + (hy3 + 3 * Math.sin(a4)).toFixed(1);
+            d2 += (q4 ? 'L' : 'M') + (base[0] + 3 * Math.cos(a4)).toFixed(1) + ' ' + (hy3 + 3 * Math.sin(a4)).toFixed(1);
           }
         }
         bbox.setAttribute('d', d2);
@@ -693,32 +686,25 @@
         } else bdot.setAttribute('visibility', 'hidden');
       } else { bbox.setAttribute('visibility', 'hidden'); bdot.setAttribute('visibility', 'hidden'); }
 
-      var wr = wm.getBoundingClientRect(), vr = vf.getBoundingClientRect();
-      var sx = wr.width / 76, sy2 = wr.height / 20, wx2 = wr.left - vr.left, wy2 = wr.top - vr.top;
-      var apex = [wx2 + 7 * sx, wy2 + 6.2 * sy2];
-      var ftL = [wx2 + 2 * sx, wy2 + 16 * sy2], ftR = [wx2 + 12 * sx, wy2 + 16 * sy2];
-      function onLeg(ft){ var k2 = (yL - apex[1]) / (ft[1] - apex[1]); return apex[0] + (ft[0] - apex[0]) * k2; }
-      var xL = onLeg(ftL), xR = onLeg(ftR);
-
-      var fx = [xL + (xR - xL) * 0.3, xL + (xR - xL) * 0.72];
-      var born = [3700, 4000], fo = '', fhF = Math.max(18, 0.13 * h);
-      for (var q = 0; q < 2; q++){
-        var F = Math.min(grow(st, born[q], 300), out);
-        if (F > 0.01){
-          var fh2 = fhF * F;
-          fo += '<ellipse cx="' + fx[q].toFixed(1) + '" cy="' + yL.toFixed(1) + '" rx="' + (8 * F).toFixed(1) + '" ry="' + (2.6 * F).toFixed(1) + '"/>' +
-                '<line x1="' + fx[q].toFixed(1) + '" y1="' + yL.toFixed(1) + '" x2="' + fx[q].toFixed(1) + '" y2="' + (yL - fh2).toFixed(1) + '"/>' +
-                '<circle cx="' + fx[q].toFixed(1) + '" cy="' + (yL - fh2 - 4 * F).toFixed(1) + '" r="' + (3 * F).toFixed(1) + '"/>';
-        }
+      /* One stand-in grows on the line beside the double. */
+      var fX = xL + (xR - xL) * 0.32, fp = onLine(fX);
+      var F = Math.min(grow(st, 3100, 300), out), fo = '', fhF = Math.max(18, 0.13 * h);
+      if (F > 0.01){
+        var fh2 = fhF * F;
+        fo = '<ellipse cx="' + fp[0].toFixed(1) + '" cy="' + fp[1].toFixed(1) + '" rx="' + (8 * F).toFixed(1) + '" ry="' + (2.6 * F).toFixed(1) + '"/>' +
+             '<line x1="' + fp[0].toFixed(1) + '" y1="' + fp[1].toFixed(1) + '" x2="' + fp[0].toFixed(1) + '" y2="' + (fp[1] - fh2).toFixed(1) + '"/>' +
+             '<circle cx="' + fp[0].toFixed(1) + '" cy="' + (fp[1] - fh2 - 4 * F).toFixed(1) + '" r="' + (3 * F).toFixed(1) + '"/>';
       }
       if (fo !== bfigsLast){ bfigs.innerHTML = fo; bfigsLast = fo; }
 
+      /* The A frames them: its legs land on the line. */
       var wo = '';
-      var WG = Math.min(grow(st, 4300, 700), out);
+      var WG = Math.min(grow(st, 3700, 700), out);
       if (WG > 0.01){
         [[ftL, xL], [ftR, xR]].forEach(function(pair){
-          var x2 = pair[0][0] + (pair[1] - pair[0][0]) * WG;
-          var y2 = pair[0][1] + (yL - pair[0][1]) * WG;
+          var end = onLine(pair[1]);
+          var x2 = pair[0][0] + (end[0] - pair[0][0]) * WG;
+          var y2 = pair[0][1] + (end[1] - pair[0][1]) * WG;
           wo += '<line x1="' + pair[0][0].toFixed(1) + '" y1="' + pair[0][1].toFixed(1) +
                 '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
         });
@@ -729,20 +715,15 @@
     function paint(ts){
       if (t0 === null) t0 = ts;
       var tr = reduce ? 0 : ts - t0;
-      var cyc = Math.floor(tr / TOTAL), within = tr - cyc * TOTAL;
+      var within = tr % TOTAL;
       var k = 0, st = within;
       while (st >= SEG[k].len){ st -= SEG[k].len; k++; }
       var seg = SEG[k];
       var t = ts / 1000;
 
-      var ftA = fit(RATIOS[cyc % RATIOS.length]);
-      if (!reduce && seg.to === 0 && seg.from !== undefined){
-        var ftB = fit(RATIOS[(cyc + 1) % RATIOS.length]);
-        var u0 = ease(st / seg.len);
-        W = ftA[0] + (ftB[0] - ftA[0]) * u0;
-        H = ftA[1] + (ftB[1] - ftA[1]) * u0;
-      } else { W = ftA[0]; H = ftA[1]; }
-      if (reduce){ var f2 = fit(2.39); W = f2[0]; H = f2[1]; }
+      /* One frame, held: 2.39. The line does all the moving. */
+      var ft = fit(2.39);
+      W = ft[0]; H = ft[1];
       vf.style.width = W.toFixed(1) + 'px';
       vf.style.height = H.toFixed(1) + 'px';
       reel.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
@@ -755,17 +736,22 @@
         if (state !== 1) hideLook();
         if (state !== 2) hideMeter();
         if (state !== 3) hideBlock();
-        if (state === 0) dressSun(reduce ? 0 : st, seg.len, W, H);
+        if (state === 0) dressSun(reduce ? 0 : st, seg.len, W, H, reduce ? 0 : t);
         else if (state === 1) dressLook(st, seg.len, W, H, t);
-        else if (state === 2) dressMeter(st, seg.len, W, H);
-        else dressBlock(st, seg.len, W, H);
+        else if (state === 2) dressMeter(st, seg.len, W, H, t);
+        else dressBlock(st, seg.len, W, H, t);
       } else {
-        var u = ease(st / seg.len);
+        /* The warp: the line's head leads and its tail follows, so it
+           flows into the next shape rather than translating rigidly. */
+        var p = st / seg.len;
         var A = linePts(seg.from, W, H, t), Bp = linePts(seg.to, W, H, t);
         var pts = [];
-        for (var i = 0; i <= N; i++) pts.push([A[i][0] + (Bp[i][0] - A[i][0]) * u, A[i][1] + (Bp[i][1] - A[i][1]) * u]);
+        for (var i = 0; i <= N; i++){
+          var ui = ease(clamp01(p * 1.3 - 0.3 * (i / N)));
+          pts.push([A[i][0] + (Bp[i][0] - A[i][0]) * ui, A[i][1] + (Bp[i][1] - A[i][1]) * ui]);
+        }
         lineEl.setAttribute('d', pathOf(pts));
-        setStroke(seg.from, seg.to, u);
+        setStroke(seg.from, seg.to, ease(p));
         hideAll();
       }
     }
@@ -787,7 +773,7 @@
       cancelAnimationFrame(raf); clearInterval(tick);
     }
 
-    var s0 = fit(RATIOS[0]); W = s0[0]; H = s0[1];
+    var s0 = fit(2.39); W = s0[0]; H = s0[1];
 
     if ('IntersectionObserver' in window){
       new IntersectionObserver(function(en){ en[0].isIntersecting ? start() : stop(); }).observe(inner);
