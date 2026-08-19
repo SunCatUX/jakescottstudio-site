@@ -143,7 +143,6 @@
     <svg id="reel">
       <g id="bgrid" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="1"></g>
       <path id="bbox" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="1.1" visibility="hidden"/>
-      <ellipse id="borbit" fill="none" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="1" stroke-dasharray="3 4" visibility="hidden"/>
       <circle id="bdot" r="2.6" fill="#FFFFFF" fill-opacity=".9" visibility="hidden"/>
       <g id="bfigs" stroke="#64D2FF" stroke-opacity=".9" stroke-width="1.2" fill="none"></g>
       <g id="bwedge" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1"></g>
@@ -437,7 +436,6 @@
     var mretd = document.getElementById('mretd');
     var bgrid = document.getElementById('bgrid');
     var bbox = document.getElementById('bbox');
-    var borbit = document.getElementById('borbit');
     var bdot = document.getElementById('bdot');
     var bfigs = document.getElementById('bfigs');
     var bwedge = document.getElementById('bwedge');
@@ -539,7 +537,6 @@
       if (bfigsLast !== ''){ bfigs.innerHTML = ''; bfigsLast = ''; }
       if (bwedgeLast !== ''){ bwedge.innerHTML = ''; bwedgeLast = ''; }
       bbox.setAttribute('visibility', 'hidden');
-      borbit.setAttribute('visibility', 'hidden');
       bdot.setAttribute('visibility', 'hidden');
     }
     function hideAll(){ hideSun(); hideLook(); hideMeter(); hideBlock(); setTicks('', '#FFFFFF'); }
@@ -658,33 +655,43 @@
       }
       if (o !== bgridLast){ bgrid.innerHTML = o; bgridLast = o; }
 
-      var B = Math.min(grow(st, 1000, 400), out);
-      var bx = 0.72 * w, bw2 = Math.max(26, 0.085 * w), bhF = Math.max(34, 0.26 * h), by = 0.86 * h;
-      if (B > 0.01){
-        var bh2 = bhF * B;
-        var c = [[bx - bw2 / 2, by], [bx + bw2 / 2, by], [bx + bw2 / 2, by - bh2], [bx - bw2 / 2, by - bh2]];
-        var k = 0.13, d2 = '';
-        var b2 = c.map(function(p){ return [p[0] + (vpx - p[0]) * k, p[1] + (vpy - p[1]) * k]; });
-        for (var e2 = 0; e2 < 4; e2++){
-          var n2 = (e2 + 1) % 4;
-          d2 += 'M' + c[e2][0].toFixed(1) + ' ' + c[e2][1].toFixed(1) + 'L' + c[n2][0].toFixed(1) + ' ' + c[n2][1].toFixed(1) +
-                'M' + b2[e2][0].toFixed(1) + ' ' + b2[e2][1].toFixed(1) + 'L' + b2[n2][0].toFixed(1) + ' ' + b2[n2][1].toFixed(1) +
-                'M' + c[e2][0].toFixed(1) + ' ' + c[e2][1].toFixed(1) + 'L' + b2[e2][0].toFixed(1) + ' ' + b2[e2][1].toFixed(1);
+      /* The scan: a spine grows from the line, and the scanning dot draws
+         its three orbit rings around it, chest, eye, knee. What remains is
+         the scanned double: a spine and three contours. */
+      var S = Math.min(grow(st, 1000, 300), out);
+      var sx3 = 0.72 * w, shF = Math.max(30, 0.20 * h), rxF = Math.max(12, 0.05 * w);
+      var HTS = [0.55, 0.8, 0.2];
+      if (S > 0.01){
+        var d2 = 'M' + sx3.toFixed(1) + ' ' + yL.toFixed(1) + 'L' + sx3.toFixed(1) + ' ' + (yL - shF * S).toFixed(1);
+        var rx3 = rxF * out, ry3 = rx3 * 0.32;
+        var scanT = st - 1400, dotOn = false, dx3 = 0, dy3 = 0;
+        for (var p2 = 0; p2 < 3; p2++){
+          var pt2 = scanT - p2 * 700;
+          if (pt2 <= 0) break;
+          var aMax = Math.min(1, pt2 / 700) * 2 * Math.PI;
+          var cyR = yL - shF * HTS[p2] * out;
+          var steps = Math.max(2, Math.ceil(aMax / (Math.PI / 12)));
+          for (var q3 = 0; q3 <= steps; q3++){
+            var a3 = aMax * q3 / steps;
+            var px3 = sx3 + rx3 * Math.cos(a3), py3 = cyR + ry3 * Math.sin(a3);
+            d2 += (q3 ? 'L' : 'M' ) + px3.toFixed(1) + ' ' + py3.toFixed(1);
+            if (pt2 < 700 && q3 === steps){ dotOn = true; dx3 = px3; dy3 = py3; }
+          }
+        }
+        if (st > 3600 && out > 0.5){
+          var hy3 = yL - shF * out - 5 * out;
+          for (var q4 = 0; q4 <= 12; q4++){
+            var a4 = 2 * Math.PI * q4 / 12;
+            d2 += (q4 ? 'L' : 'M') + (sx3 + 3 * Math.cos(a4)).toFixed(1) + ' ' + (hy3 + 3 * Math.sin(a4)).toFixed(1);
+          }
         }
         bbox.setAttribute('d', d2);
         bbox.setAttribute('visibility', 'visible');
-      } else bbox.setAttribute('visibility', 'hidden');
-
-      if (st > 1500 && st < 3300 && out > 0.9){
-        var ot = st - 1500, pass = Math.min(2, Math.floor(ot / 600));
-        var oy = by - bhF * [0.55, 0.8, 0.2][pass], orx = bw2 * 1.5, ory = orx * 0.3;
-        borbit.setAttribute('cx', bx.toFixed(1)); borbit.setAttribute('cy', oy.toFixed(1));
-        borbit.setAttribute('rx', orx.toFixed(1)); borbit.setAttribute('ry', ory.toFixed(1));
-        var a2 = (ot % 600) / 600 * 2 * Math.PI;
-        bdot.setAttribute('cx', (bx + orx * Math.cos(a2)).toFixed(1));
-        bdot.setAttribute('cy', (oy + ory * Math.sin(a2)).toFixed(1));
-        borbit.setAttribute('visibility', 'visible'); bdot.setAttribute('visibility', 'visible');
-      } else { borbit.setAttribute('visibility', 'hidden'); bdot.setAttribute('visibility', 'hidden'); }
+        if (dotOn){
+          bdot.setAttribute('cx', dx3.toFixed(1)); bdot.setAttribute('cy', dy3.toFixed(1));
+          bdot.setAttribute('visibility', 'visible');
+        } else bdot.setAttribute('visibility', 'hidden');
+      } else { bbox.setAttribute('visibility', 'hidden'); bdot.setAttribute('visibility', 'hidden'); }
 
       var wr = wm.getBoundingClientRect(), vr = vf.getBoundingClientRect();
       var sx = wr.width / 76, sy2 = wr.height / 20, wx2 = wr.left - vr.left, wy2 = wr.top - vr.top;
@@ -694,7 +701,7 @@
       var xL = onLeg(ftL), xR = onLeg(ftR);
 
       var fx = [xL + (xR - xL) * 0.3, xL + (xR - xL) * 0.72];
-      var born = [3500, 3900], fo = '', fhF = Math.max(18, 0.13 * h);
+      var born = [3700, 4000], fo = '', fhF = Math.max(18, 0.13 * h);
       for (var q = 0; q < 2; q++){
         var F = Math.min(grow(st, born[q], 300), out);
         if (F > 0.01){
