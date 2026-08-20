@@ -474,7 +474,7 @@
                 { c: '#64D2FF', az: 158, r: 5.6, face: -10 },
                 { c: '#FF9F0A', az: 146, r: 6.8, face: null }] }
     ];
-    var SETUP_LEN = 10000, GLIDE = 800, BOOT = 2400;
+    var SETUP_LEN = 10000, GLIDE = 800, BOOT = 3700;
 
     function setupAt(tc){
       var i = Math.floor(tc / SETUP_LEN) % SETUPS.length;
@@ -538,61 +538,81 @@
       }
       o += '<path d="' + dOr + '" fill="none" stroke="#FF9F0A" stroke-opacity=".7" stroke-width="1.4"/>';
       if (dYe) o += '<path d="' + dYe + '" fill="none" stroke="#FFCC00" stroke-opacity=".8" stroke-width="1.4"/>';
-      if (prog >= 1){
-        model.hours.forEach(function(hp){
-          o += seg(pt(cx, cy, hp[2], Ra - 3), pt(cx, cy, hp[2], Ra + 3));
-          if (R >= 100 && hp[3] % 2 === 0){
-            var tp = pt(cx, cy, hp[2], Ra + 13);
-            if (!hitsGuard(tp, 10)){
-              o += '<text x="' + tp[0].toFixed(1) + '" y="' + (tp[1] + 3).toFixed(1) + '" text-anchor="middle">' +
-                   (hp[3] < 10 ? '0' + hp[3] : hp[3]) + '</text>';
-            }
+      /* The pen marks each hour as it passes it. */
+      var span = model.set - model.rise;
+      model.hours.forEach(function(hp){
+        if ((hp[0] - model.rise) / span > prog) return;
+        o += seg(pt(cx, cy, hp[2], Ra - 3), pt(cx, cy, hp[2], Ra + 3));
+        if (R >= 100 && hp[3] % 2 === 0){
+          var tp = pt(cx, cy, hp[2], Ra + 13);
+          if (!hitsGuard(tp, 10)){
+            o += '<text x="' + tp[0].toFixed(1) + '" y="' + (tp[1] + 3).toFixed(1) + '" text-anchor="middle">' +
+                 (hp[3] < 10 ? '0' + hp[3] : hp[3]) + '</text>';
           }
-        });
+        }
+      });
+      if (prog > 0.02){
         var rp = pt(cx, cy, model.samples[0][2], Ra + 16);
-        var sp = pt(cx, cy, model.samples[model.samples.length - 1][2], Ra + 16);
         if (hitsGuard(rp, 20)) rp = pt(cx, cy, model.samples[0][2], Ra + 36);
-        if (hitsGuard(sp, 20)) sp = pt(cx, cy, model.samples[model.samples.length - 1][2], Ra + 36);
         o += '<text x="' + rp[0].toFixed(1) + '" y="' + (rp[1] + 3).toFixed(1) + '" text-anchor="middle">' + fmtHM.format(model.rise) + '</text>';
+      }
+      if (prog >= 1){
+        var sp = pt(cx, cy, model.samples[model.samples.length - 1][2], Ra + 16);
+        if (hitsGuard(sp, 20)) sp = pt(cx, cy, model.samples[model.samples.length - 1][2], Ra + 36);
         o += '<text x="' + sp[0].toFixed(1) + '" y="' + (sp[1] + 3).toFixed(1) + '" text-anchor="middle">' + fmtHM.format(model.set) + '</text>';
       }
       if (o !== arcLast){ parc.innerHTML = '<g stroke="#FF9F0A" stroke-opacity=".7" stroke-width="1">' + o + '</g>'; arcLast = o; }
     }
 
-    function drawStage(cx, cy, R, tc, e){
+    /* The stage drafts itself: the wedge rules out from the camera, its cap
+       draws, then each marker's leader runs out and the mark snaps at
+       arrival, one after another. Constant pen speed, no easing. */
+    function drawStage(cx, cy, R, tc, bootT){
       var s = setupAt(tc);
       var pxm = R / PLATE_M;
-      var Rw = R * 0.94 * e, o = '';
+      var Rw = R * 0.94, o = '';
       var a1 = s.wedgeAz - s.hfov / 2, a2 = s.wedgeAz + s.hfov / 2;
+      var wp = clamp01(bootT / 600), cp = clamp01((bootT - 650) / 200);
       o += '<g stroke="#FFFFFF" stroke-opacity=".4" stroke-width="1">';
-      o += seg([cx, cy], pt(cx, cy, a1, Rw));
-      o += seg([cx, cy], pt(cx, cy, a2, Rw));
-      var cap = '';
-      for (var q = 0; q <= 8; q++){
-        var p2 = pt(cx, cy, a1 + (a2 - a1) * q / 8, Rw);
-        cap += (q ? 'L' : 'M') + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1);
+      if (wp > 0){
+        o += seg([cx, cy], pt(cx, cy, a1, Rw * wp));
+        o += seg([cx, cy], pt(cx, cy, a2, Rw * wp));
       }
-      o += '<path d="' + cap + '" fill="none" stroke-opacity=".25"/>';
-      o += '</g>';
-      s.marks.forEach(function(m){
-        var mp = pt(cx, cy, m.az, m.r * pxm * e);
-        var rr = 3.5 * (m.scale === undefined ? 1 : m.scale) * (e < 1 ? e : 1);
-        if (rr < 0.4) return;
-        o += '<line x1="' + cx + '" y1="' + cy + '" x2="' + mp[0].toFixed(1) + '" y2="' + mp[1].toFixed(1) +
-             '" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="1"/>';
-        o += '<circle cx="' + mp[0].toFixed(1) + '" cy="' + mp[1].toFixed(1) + '" r="' + rr.toFixed(1) +
-             '" fill="' + m.c + '" fill-opacity=".9"/>';
-        if (m.dot && m.face !== null){
-          var f1 = pt(mp[0], mp[1], m.face, rr + 1);
-          var f2 = pt(mp[0], mp[1], m.face, rr + 5);
-          o += '<line x1="' + f1[0].toFixed(1) + '" y1="' + f1[1].toFixed(1) + '" x2="' + f2[0].toFixed(1) + '" y2="' + f2[1].toFixed(1) +
-               '" stroke="' + m.c + '" stroke-opacity=".9" stroke-width="1.2"/>';
+      if (cp > 0){
+        var nSeg = Math.max(1, Math.round(8 * cp)), cap = '';
+        for (var q = 0; q <= nSeg; q++){
+          var p2 = pt(cx, cy, a1 + (a2 - a1) * q / 8, Rw);
+          cap += (q ? 'L' : 'M') + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1);
         }
-        if (e >= 1 && R >= 80){
-          var lp = pt(cx, cy, m.az, m.r * pxm * e + 14);
-          if (!hitsGuard(lp, 16)){
-            o += '<text x="' + lp[0].toFixed(1) + '" y="' + (lp[1] + 3).toFixed(1) +
-                 '" text-anchor="middle">' + (m.r).toFixed(1) + ' m</text>';
+        o += '<path d="' + cap + '" fill="none" stroke-opacity=".25"/>';
+      }
+      o += '</g>';
+      s.marks.forEach(function(m, qi){
+        var mt = bootT - (900 + qi * 240);
+        if (mt <= 0) return;
+        var lp2 = clamp01(mt / 140);
+        var mp = pt(cx, cy, m.az, m.r * pxm);
+        var le = [cx + (mp[0] - cx) * lp2, cy + (mp[1] - cy) * lp2];
+        o += '<line x1="' + cx + '" y1="' + cy + '" x2="' + le[0].toFixed(1) + '" y2="' + le[1].toFixed(1) +
+             '" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="1"/>';
+        if (lp2 >= 1){
+          var rr = 3.5 * (m.scale === undefined ? 1 : m.scale);
+          if (rr >= 0.4){
+            o += '<circle cx="' + mp[0].toFixed(1) + '" cy="' + mp[1].toFixed(1) + '" r="' + rr.toFixed(1) +
+                 '" fill="' + m.c + '" fill-opacity=".9"/>';
+            if (m.dot && m.face !== null){
+              var f1 = pt(mp[0], mp[1], m.face, rr + 1);
+              var f2 = pt(mp[0], mp[1], m.face, rr + 5);
+              o += '<line x1="' + f1[0].toFixed(1) + '" y1="' + f1[1].toFixed(1) + '" x2="' + f2[0].toFixed(1) + '" y2="' + f2[1].toFixed(1) +
+                   '" stroke="' + m.c + '" stroke-opacity=".9" stroke-width="1.2"/>';
+            }
+          }
+          if (mt > 260 && R >= 80){
+            var lp = pt(cx, cy, m.az, m.r * pxm + 14);
+            if (!hitsGuard(lp, 16)){
+              o += '<text x="' + lp[0].toFixed(1) + '" y="' + (lp[1] + 3).toFixed(1) +
+                   '" text-anchor="middle">' + (m.r).toFixed(1) + ' m</text>';
+            }
           }
         }
       });
@@ -600,24 +620,35 @@
       return s;
     }
 
-    function drawPlate(w, h, R, s, on){
+    /* The furniture sets itself: the scale bar rules left to right and
+       takes its ticks, then the title block sets line by line. */
+    function drawPlate(w, h, R, s, pT){
       var o = '';
-      if (on){
+      if (pT > 0){
         var pxm = R / PLATE_M;
         var bx = 18, by = h - 16, bl = pxm * 2;
+        var bp = clamp01(pT / 200);
         o += '<g stroke="#FFFFFF" stroke-opacity=".4" stroke-width="1">';
-        o += '<line x1="' + bx + '" y1="' + by + '" x2="' + (bx + bl).toFixed(1) + '" y2="' + by + '"/>';
-        for (var q = 0; q <= 2; q++){
-          var tx = bx + bl * q / 2;
-          o += '<line x1="' + tx.toFixed(1) + '" y1="' + (by - 3) + '" x2="' + tx.toFixed(1) + '" y2="' + (by + 3) + '"/>';
+        o += '<line x1="' + bx + '" y1="' + by + '" x2="' + (bx + bl * bp).toFixed(1) + '" y2="' + by + '"/>';
+        if (bp >= 1){
+          for (var q = 0; q <= 2; q++){
+            var tx = bx + bl * q / 2;
+            o += '<line x1="' + tx.toFixed(1) + '" y1="' + (by - 3) + '" x2="' + tx.toFixed(1) + '" y2="' + (by + 3) + '"/>';
+          }
         }
         o += '</g>';
-        o += '<text x="' + (bx + bl + 8).toFixed(1) + '" y="' + (by + 3) + '">2 m</text>';
-        o += '<text x="' + bx + '" y="' + (by - 9) + '" style="font-family:ui-serif,\'New York\',Georgia,serif;font-style:italic;letter-spacing:0" font-size="10">Scale</text>';
-        var lat = Math.abs(LAT).toFixed(1) + (LAT >= 0 ? 'N' : 'S');
-        var lon = Math.abs(LON).toFixed(1) + (LON >= 0 ? 'E' : 'W');
-        o += '<text x="' + (w - 16) + '" y="' + (h - 25) + '" text-anchor="end">N-UP · ' + lat + ' ' + lon + '</text>';
-        o += '<text x="' + (w - 16) + '" y="' + (h - 13) + '" text-anchor="end">SETUP 0' + (s.idx + 1) + ' · ' + s.focal + ' MM</text>';
+        if (pT > 260){
+          o += '<text x="' + (bx + bl + 8).toFixed(1) + '" y="' + (by + 3) + '">2 m</text>';
+          o += '<text x="' + bx + '" y="' + (by - 9) + '" style="font-family:ui-serif,\'New York\',Georgia,serif;font-style:italic;letter-spacing:0" font-size="10">Scale</text>';
+        }
+        if (s && pT > 380){
+          var lat = Math.abs(LAT).toFixed(1) + (LAT >= 0 ? 'N' : 'S');
+          var lon = Math.abs(LON).toFixed(1) + (LON >= 0 ? 'E' : 'W');
+          o += '<text x="' + (w - 16) + '" y="' + (h - 25) + '" text-anchor="end">N-UP · ' + lat + ' ' + lon + '</text>';
+          if (pT > 500){
+            o += '<text x="' + (w - 16) + '" y="' + (h - 13) + '" text-anchor="end">SETUP 0' + (s.idx + 1) + ' · ' + s.focal + ' MM</text>';
+          }
+        }
       }
       if (o !== plateLast){ pplate.innerHTML = o; plateLast = o; }
     }
@@ -639,19 +670,19 @@
       var wr = wm.getBoundingClientRect(), vr = vf.getBoundingClientRect();
       guard = [wr.left - vr.left - 6, wr.top - vr.top - 6, wr.right - vr.left + 6, wr.bottom - vr.top + 6];
 
-      /* Boot: the ring calibrates round, the day draws in, the setup takes
-         its marks. After that the plate simply works. */
-      drawRing(cx, cy, R, reduce ? 1 : grow(tp, 200, 1000));
+      /* Boot: the plotter drafts the plate. Ring, then the day, then the
+         stage, then the furniture. After that the plate simply works. */
+      drawRing(cx, cy, R, reduce ? 1 : grow(tp, 150, 900));
       drawArc(cx, cy, R, reduce ? 1 : grow(tp, 1100, 800));
-      var e = reduce ? 1 : ease(grow(tp, 1700, 700));
+      var bootT = reduce ? 1e9 : tp - 1950;
       var s = null;
-      if (e > 0.01) s = drawStage(cx, cy, R, reduce ? 0 : Math.max(0, tp - BOOT), e);
+      if (bootT > 0) s = drawStage(cx, cy, R, reduce ? 0 : Math.max(0, tp - BOOT), bootT);
       else { if (stageLast !== ''){ pstage.innerHTML = ''; stageLast = ''; } }
-      drawPlate(W, H, R, s || SETUPS[0] && { idx: 0, focal: SETUPS[0].focal }, tp > BOOT - 200 && !!s);
+      drawPlate(W, H, R, s, reduce ? 1e9 : tp - 2100);
 
       /* The sun: the previewed day sweeps; now is where the sun really is. */
       var Ra = R + 8, show = false;
-      if (model.samples.length && nowMs > model.rise && nowMs < model.set){
+      if ((reduce || tp > 1900) && model.samples.length && nowMs > model.rise && nowMs < model.set){
         var np = pt(cx, cy, sunPos(new Date(nowMs)).az, Ra);
         pnow.setAttribute('cx', np[0].toFixed(1)); pnow.setAttribute('cy', np[1].toFixed(1));
         show = true;
