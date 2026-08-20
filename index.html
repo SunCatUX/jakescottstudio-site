@@ -653,9 +653,12 @@
       if (o !== plateLast){ pplate.innerHTML = o; plateLast = o; }
     }
 
+    /* Reduce Motion keeps the plate working: the one-time draft, the damped
+       re-blocks and the true sun all stay; only the perpetual previewed-day
+       sweep is dropped. Instrument motion is content here, not decoration. */
     function paint(ts){
       if (t0 === null) t0 = ts;
-      var tp = reduce ? BOOT + 1 : ts - t0;
+      var tp = ts - t0;
       var ft = fit(2.39);
       W = ft[0]; H = ft[1];
       vf.style.width = W.toFixed(1) + 'px';
@@ -672,17 +675,17 @@
 
       /* Boot: the plotter drafts the plate. Ring, then the day, then the
          stage, then the furniture. After that the plate simply works. */
-      drawRing(cx, cy, R, reduce ? 1 : grow(tp, 150, 900));
-      drawArc(cx, cy, R, reduce ? 1 : grow(tp, 1100, 800));
-      var bootT = reduce ? 1e9 : tp - 1950;
+      drawRing(cx, cy, R, grow(tp, 150, 900));
+      drawArc(cx, cy, R, grow(tp, 1100, 800));
+      var bootT = tp - 1950;
       var s = null;
-      if (bootT > 0) s = drawStage(cx, cy, R, reduce ? 0 : Math.max(0, tp - BOOT), bootT);
+      if (bootT > 0) s = drawStage(cx, cy, R, Math.max(0, tp - BOOT), bootT);
       else { if (stageLast !== ''){ pstage.innerHTML = ''; stageLast = ''; } }
-      drawPlate(W, H, R, s, reduce ? 1e9 : tp - 2100);
+      drawPlate(W, H, R, s, tp - 2100);
 
       /* The sun: the previewed day sweeps; now is where the sun really is. */
       var Ra = R + 8, show = false;
-      if ((reduce || tp > 1900) && model.samples.length && nowMs > model.rise && nowMs < model.set){
+      if (tp > 1900 && model.samples.length && nowMs > model.rise && nowMs < model.set){
         var np = pt(cx, cy, sunPos(new Date(nowMs)).az, Ra);
         pnow.setAttribute('cx', np[0].toFixed(1)); pnow.setAttribute('cy', np[1].toFixed(1));
         show = true;
@@ -699,21 +702,16 @@
       pnow.setAttribute('visibility', show ? 'visible' : 'hidden');
     }
 
-    var running = false, raf = 0, tick = 0;
+    var running = false, raf = 0;
     function loop(ts){ if (!running) return; paint(ts); raf = requestAnimationFrame(loop); }
     function start(){
       if (running) return;
       running = true; t0 = null;
-      if (reduce){
-        paint(performance.now());
-        tick = setInterval(function(){ paint(performance.now()); }, 30000);
-      } else {
-        raf = requestAnimationFrame(loop);
-      }
+      raf = requestAnimationFrame(loop);
     }
     function stop(){
       running = false;
-      cancelAnimationFrame(raf); clearInterval(tick);
+      cancelAnimationFrame(raf);
     }
 
     if ('IntersectionObserver' in window){
