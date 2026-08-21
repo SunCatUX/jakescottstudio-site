@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ariadne: Director's Viewfinder</title>
-<meta name="description" content="Ariadne is a director's viewfinder, an AR blocking stage, film exposure tools and camera look files in one iPhone screen. From Jake Scott Studio, the UX studio of cinematographer Jake Scott.">
+<meta name="description" content="Ariadne is a director's viewfinder for iPhone, in development at Jake Scott Studio. Beta testing via TestFlight is coming soon.">
 <meta property="og:title" content="Ariadne: Director's Viewfinder">
-<meta property="og:description" content="See the location through your camera and lens. A director's viewfinder worked on two engraved wheels, an AR blocking stage, film exposure tools and camera look files, in one screen.">
+<meta property="og:description" content="A director's viewfinder for iPhone, in development. Beta testing via TestFlight is coming soon.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Crect%20width='1024'%20height='1024'%20rx='180'%20fill='%23171717'/%3E%3Cg%20stroke='%23FFCC00'%20stroke-width='56'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M%20290%20140%20L%20208%20140%20A%2068%2068%200%200%200%20140%20208%20L%20140%20290'/%3E%3Cpath%20d='M%20734%20140%20L%20816%20140%20A%2068%2068%200%200%201%20884%20208%20L%20884%20290'/%3E%3Cpath%20d='M%20290%20884%20L%20208%20884%20A%2068%2068%200%200%201%20140%20816%20L%20140%20734'/%3E%3Cpath%20d='M%20734%20884%20L%20816%20884%20A%2068%2068%200%200%200%20884%20816%20L%20884%20734'/%3E%3C/g%3E%3Cg%20stroke='%23FFFFFF'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M%20285%20770%20L%20439.5%20382%20A%2078%2078%200%200%201%20584.5%20382%20L%20739%20770'%20stroke-width='68'/%3E%3Cpath%20d='M%20317%20508%20H%20707'%20stroke-width='56'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   /* The page wears the app's own system: viewfinder black, yellow speaks / white
@@ -79,33 +79,9 @@
     text-transform:uppercase;color:var(--faint);
     padding-top:.3rem;
   }
-  section.row h2{
-    font-size:clamp(1.2rem,2.4vw,1.45rem);font-weight:600;line-height:1.4;
-    max-width:26ch;
-    margin-bottom:1rem;
-  }
-  section.row h3{
-    font-size:1.1rem;font-weight:600;
-    margin-bottom:.55rem;
-  }
   section.row p{color:var(--dim);max-width:58ch}
   section.row p+p{margin-top:.7rem}
-  .spec{
-    font-family:var(--mono);font-size:.76rem;letter-spacing:.06em;
-    color:var(--faint);margin-top:1rem;
-  }
   .beta .eyebrow{color:var(--yellow)}
-
-  .spectable div{
-    display:grid;grid-template-columns:150px 1fr;column-gap:1.5rem;
-    padding:.55rem 0;border-top:1px solid var(--hairline);
-  }
-  .spectable div:first-child{border-top:none;padding-top:0}
-  .spectable dt{
-    font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--faint);padding-top:.25em;
-  }
-  .spectable dd{color:var(--dim);font-size:.95rem}
 
   .fineprint p{font-size:.85rem;line-height:1.7;color:var(--faint);max-width:60ch}
   .fineprint p+p{margin-top:.7rem}
@@ -130,7 +106,6 @@
   @media (max-width:600px){
     section.row{grid-template-columns:1fr;row-gap:.7rem}
     .eyebrow{padding-top:0}
-    .spectable div{grid-template-columns:1fr;row-gap:.1rem}
     .colophon{grid-template-columns:1fr}
   }
 </style>
@@ -169,115 +144,7 @@
 
 <main>
   <div class="wrap">
-    <section class="row intro">
-      <div class="eyebrow"></div>
-      <div>
-        <h2>See the location through your camera and lens.</h2>
-        <p>Ariadne turns an iPhone into a location scout's whole kit: a colour-accurate
-        director's viewfinder with a 3,000-lens catalogue, an AR blocking stage with photoreal
-        stand-ins, a film exposure meter, and the sun exactly where it will be at 7am on shoot
-        day. It works like a camera, not an app: two engraved wheels on the screen's long
-        edges, four dials in the corners, and nothing else over the picture. Built by
-        cinematographers, for cinematographers, and the conventions run deep. Where a convention
-        cannot be honoured, the tool says so rather than approximating.</p>
-      </div>
-    </section>
-
-    <section class="row">
-      <div class="eyebrow">The instrument</div>
-      <div>
-        <h3>It works like a camera.</h3>
-        <p>The viewfinder's only controls are two clicky wheels, engraved like barrels, riding
-        the screen's long edges under your thumbs, and four dials holding the corners. Focal
-        length rolls on the right; time of day, exposure and white balance share the left. The
-        tape slides past a fixed pointer, and the value at the pointer is the value set.</p>
-        <p>Every click is one value, detented and with its own haptic, so clicks can be counted
-        without looking away from the frame. Where a tape runs out, at the end of a lens line
-        or the end of the day, the wheel stops clicking and gives a little instead: a click
-        that changed nothing would be a lie.</p>
-        <p class="spec">two edge wheels · four corner dials · one click per value</p>
-      </div>
-    </section>
-
-    <section class="row">
-      <div class="eyebrow">The viewfinder</div>
-      <div>
-        <h3>The frame your camera records.</h3>
-        <p>Pick a camera body, a sensor mode and a lens; the live picture is cropped to that
-        measured field of view, and the focal wheel then clicks through the primes you actually
-        carry, one click per lens. Only focal length, sensor dimensions and squeeze drive the
-        frame; catalogue figures never adjust the picture. When a lens is wider than the phone
-        can capture, the missing field of view is drawn to scale, so the frame you judge is
-        the frame the lens gives.</p>
-        <p class="spec">3,147 lenses · 641 series · framelines &amp; hooks to any ratio</p>
-      </div>
-    </section>
-
-    <section class="row">
-      <div class="eyebrow">The look</div>
-      <div>
-        <h3>The picture under your look.</h3>
-        <p>The feed is encoded to the selected camera's log and gamut before a LUT touches
-        it, so a show LUT grades here the way it grades on set. Camera look files import
-        natively; no conversion round trip. Film stocks are emulated from the published
-        sensitometric curves and shown as release prints, rendered uncorrected under the
-        light in front of the lens. There are no filter approximations.</p>
-        <p class="spec">native look-file import · .cube · 8 film-print looks</p>
-      </div>
-    </section>
-
-    <section class="row">
-      <div class="eyebrow">The light</div>
-      <div>
-        <h3>Where the sun will be.</h3>
-        <p>Roll the TIME wheel and the sun's arc crosses the frame, hour by hour; in AR,
-        the same solar position sets the direction, colour and shadows of the light. The meter
-        states the T-stop the selected camera would need, at the set rating, shutter and frame
-        rate, checked against an incident meter and good to about a third of a stop. Spot
-        meter and false colour read the selected film stock at its rating: exposure monitoring
-        for cameras that have none.</p>
-        <p class="spec">sun path · spot meter · false colour · working-to-a-stop ND readout</p>
-      </div>
-    </section>
-
-    <section class="row">
-      <div class="eyebrow">The blocking</div>
-      <div>
-        <h3>Stand-ins in the real location.</h3>
-        <p>Stand-ins and props place on the mapped floor at real-world scale, with LiDAR
-        occlusion and shadows matched to the sun. A LiDAR scan turns a real actor into a
-        reusable digital double with measured height. Plan View plots the setup from above,
-        north up, with the camera's true field of view and lens-to-subject distances printed
-        on the frame.</p>
-        <p class="spec">AR stand-ins · scanned doubles · top-down plan view</p>
-      </div>
-    </section>
-
-    <section class="row">
-      <div class="eyebrow">The capture</div>
-      <div>
-        <h3>Frames the crew can use.</h3>
-        <p>Captures are cropped to the simulated frame, with the gear, framing guides,
-        compass and sun burnt in; Scout Mode saves the graded picture alone. A JSON sidecar
-        records the full setup with every frame. Stills and takes are kept in the app, saved
-        to Photos, or both.</p>
-        <p class="spec">burnt-in gear &amp; exposure data · scout mode · JSON sidecar</p>
-      </div>
-    </section>
-
-    <section class="row">
-      <div class="eyebrow">Specification</div>
-      <div>
-        <dl class="spectable">
-          <div><dt>Device</dt><dd>iPhone Pro models (LiDAR and the three rear cameras)</dd></div>
-          <div><dt>Orientation</dt><dd>Landscape</dd></div>
-          <div><dt>Log and Looks</dt><dd>iPhone 15 Pro or later</dd></div>
-          <div><dt>Look formats</dt><dd>.cube and native camera look files, imported directly</dd></div>
-        </dl>
-      </div>
-    </section>
-
-    <section class="row beta">
+    <section class="row intro beta">
       <div class="eyebrow">TestFlight</div>
       <div>
         <p>Ariadne is in development. Beta testing via TestFlight is coming soon.</p>
@@ -286,14 +153,10 @@
     </section>
 
     <section class="row fineprint">
-      <div class="eyebrow">Notes</div>
+      <div class="eyebrow">Studio</div>
       <div>
-        <p>Camera, lens and film format simulations reference the manufacturers' published
-        specifications. All trademarks are the property of their respective owners. Ariadne
-        is an independent product and is not endorsed by any camera or film manufacturer.</p>
         <p>Ariadne is built by Jake Scott Studio, the UX studio from cinematographer Jake
-        Scott. Selected work at
-        <a href="https://jakescottdop.com">jakescottdop.com</a>.</p>
+        Scott. Selected work at <a href="https://jakescottdop.com">jakescottdop.com</a>.</p>
       </div>
     </section>
   </div>
