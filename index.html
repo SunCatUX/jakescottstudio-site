@@ -43,6 +43,8 @@
      compass ring, today's real solar arc at its true azimuths, the camera's
      wedge, markers with distances, a scale bar. Mono numerals are the
      drawing's dimensions. Without scripts it is the static 2.39 frame. */
+  /* Air above the plate, so it opens the page rather than sitting on top of it. */
+  header.frame{padding-top:clamp(3rem,7vw,6.5rem)}
   .frame .inner{
     position:relative;
     height:clamp(220px,41.84vw,360px); /* 2.39:1 until the height cap */
