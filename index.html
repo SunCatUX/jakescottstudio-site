@@ -6,7 +6,7 @@
 <title>Ariadne: Director's Viewfinder</title>
 <meta name="description" content="Ariadne is a director's viewfinder, an AR blocking stage, film exposure tools and camera look files in one iPhone screen. From Jake Scott Studio, the UX studio of cinematographer Jake Scott.">
 <meta property="og:title" content="Ariadne: Director's Viewfinder">
-<meta property="og:description" content="Previs from where the camera will stand. A director's viewfinder, an AR blocking stage, film exposure tools and camera look files, in one screen.">
+<meta property="og:description" content="See a location through the camera and lens you plan to shoot. A director's viewfinder worked on two engraved wheels, an AR blocking stage, film exposure tools and camera look files, in one screen.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Crect%20width='1024'%20height='1024'%20rx='180'%20fill='%23171717'/%3E%3Cg%20stroke='%23FFCC00'%20stroke-width='56'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M%20290%20140%20L%20208%20140%20A%2068%2068%200%200%200%20140%20208%20L%20140%20290'/%3E%3Cpath%20d='M%20734%20140%20L%20816%20140%20A%2068%2068%200%200%201%20884%20208%20L%20884%20290'/%3E%3Cpath%20d='M%20290%20884%20L%20208%20884%20A%2068%2068%200%200%201%20140%20816%20L%20140%20734'/%3E%3Cpath%20d='M%20734%20884%20L%20816%20884%20A%2068%2068%200%200%200%20884%20816%20L%20884%20734'/%3E%3C/g%3E%3Cg%20stroke='%23FFFFFF'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M%20285%20770%20L%20439.5%20382%20A%2078%2078%200%200%201%20584.5%20382%20L%20739%20770'%20stroke-width='68'/%3E%3Cpath%20d='M%20317%20508%20H%20707'%20stroke-width='56'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   /* The page wears the app's own system: viewfinder black, yellow speaks / white
@@ -148,6 +148,7 @@
       <g id="pring" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="1"></g>
       <g id="parc"></g>
       <g id="pstage"></g>
+      <g id="pwheels"></g>
       <g id="pplate"></g>
       <circle id="pnow" r="4.5" fill="none" stroke="#FF9F0A" stroke-width="1.2" visibility="hidden"/>
       <circle id="pprev" r="3.5" fill="#FFCC00" visibility="hidden"/>
@@ -171,21 +172,40 @@
     <section class="row intro">
       <div class="eyebrow"></div>
       <div>
-        <h2>Previs from where the camera will stand.</h2>
+        <h2>See a location through the camera and lens you plan to shoot.</h2>
         <p>Ariadne turns an iPhone into a location scout's whole kit: a colour-accurate
         director's viewfinder with a 3,000-lens catalogue, an AR blocking stage with photoreal
         stand-ins, a film exposure meter, and the sun exactly where it will be at 7am on shoot
-        day. Built by cinematographers, for cinematographers, and the conventions run deep.
-        Where a convention cannot be honoured, the tool says so rather than approximating.</p>
+        day. It is worked like a camera rather than an app: two engraved wheels on the screen's
+        long edges, four dials in the corners, and nothing else over the picture. Built by
+        cinematographers, for cinematographers, and the conventions run deep. Where a convention
+        cannot be honoured, the tool says so rather than approximating.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">The instrument</div>
+      <div>
+        <h3>Worked like a camera, not an app.</h3>
+        <p>The viewfinder's only controls are two clicky wheels, engraved like barrels, riding
+        the screen's long edges under your thumbs, and four dials holding the corners. Focal
+        length rolls on the right; time of day, exposure and white balance share the left. The
+        tape slides past a fixed pointer, and the value at the pointer is the value set.</p>
+        <p>Every click is one value, detented and with its own haptic, so clicks can be counted
+        without looking away from the frame. Where a tape runs out, at the end of a lens line
+        or the end of the day, the wheel stops clicking and gives a little instead: a click
+        that changed nothing would be a lie.</p>
+        <p class="spec">two edge wheels · four corner dials · one click per value</p>
       </div>
     </section>
 
     <section class="row">
       <div class="eyebrow">The viewfinder</div>
       <div>
-        <h3>Frame it on the real glass.</h3>
+        <h3>The frame that camera and lens will give.</h3>
         <p>Pick a camera body, a sensor mode and a lens; the live picture is cropped to that
-        measured field of view. Only focal length, sensor dimensions and squeeze drive the
+        measured field of view, and the focal wheel then clicks through the primes you actually
+        carry, one click per lens. Only focal length, sensor dimensions and squeeze drive the
         frame; catalogue figures never adjust the picture. When a lens is wider than the phone
         can capture, the missing field of view is drawn to scale, so the frame you judge is
         the frame the lens gives.</p>
@@ -210,7 +230,7 @@
       <div class="eyebrow">The light</div>
       <div>
         <h3>Know where the light lands at 4pm.</h3>
-        <p>Scrub the time of day and the sun's arc crosses the frame, hour by hour; in AR,
+        <p>Roll the TIME wheel and the sun's arc crosses the frame, hour by hour; in AR,
         the same solar position sets the direction, colour and shadows of the light. The meter
         states the T-stop the selected camera would need, at the set rating, shutter and frame
         rate, checked against an incident meter and good to about a third of a stop. Spot
@@ -432,11 +452,12 @@
     var pnow = document.getElementById('pnow');
     var pprev = document.getElementById('pprev');
     var pstage = document.getElementById('pstage');
+    var pwheels = document.getElementById('pwheels');
     var pplate = document.getElementById('pplate');
 
     var model = dayModel();
     var t0 = null, W = 0, H = 0, lastMin = -1;
-    var ringLast = '', arcLast = '', stageLast = '', plateLast = '';
+    var ringLast = '', arcLast = '', stageLast = '', plateLast = '', wheelsLast = '';
 
     function fit(r){
       var mw = inner.clientWidth, mh = inner.clientHeight - 32;
@@ -460,16 +481,23 @@
     /* The setups: marker positions in metres on an 8 m plate, the lens'
        true horizontal field of view on Super 35. */
     var PLATE_M = 8;
+    /* The prime ladder the focal wheel clicks along, and the Super 35
+       horizontal field of view each one gives: one click, one lens, one
+       wedge. Rolling 32 to 50 passes through 40, and the wedge steps with
+       it, because on this wheel a click is a value. */
+    var FOCALS = [16, 18, 21, 24, 27, 32, 40, 50, 65, 75, 100];
+    var S35_W = 24.89;
+    function hfovFor(f){ return 2 * Math.atan(S35_W / 2 / f) / RAD; }
     var SETUPS = [
-      { focal: 32, hfov: 42.6, wedgeAz: 172,
+      { focal: 32, wedgeAz: 172,
         marks: [{ c: '#64D2FF', az: 158, r: 4.6, face: 20 },
                 { c: '#64D2FF', az: 186, r: 6.0, face: -35 },
                 { c: '#FF9F0A', az: 172, r: 2.6, face: null }] },
-      { focal: 50, hfov: 28.0, wedgeAz: 204,
+      { focal: 50, wedgeAz: 204,
         marks: [{ c: '#64D2FF', az: 210, r: 6.6, face: -90 },
                 { c: '#64D2FF', az: 197, r: 3.4, face: 15 },
                 { c: '#30D158', az: 204, r: 5.0, face: 40 }] },
-      { focal: 24, hfov: 54.6, wedgeAz: 146,
+      { focal: 24, wedgeAz: 146,
         marks: [{ c: '#64D2FF', az: 132, r: 3.6, face: 45 },
                 { c: '#64D2FF', az: 158, r: 5.6, face: -10 },
                 { c: '#FF9F0A', az: 146, r: 6.8, face: null }] }
@@ -483,10 +511,13 @@
       var u = into > SETUP_LEN - GLIDE ? ease((into - (SETUP_LEN - GLIDE)) / GLIDE) : 0;
       var A = SETUPS[i], B = SETUPS[j];
       function mixv(a, b){ return a + (b - a) * u; }
+      var fIdx = mixv(FOCALS.indexOf(A.focal), FOCALS.indexOf(B.focal));
+      var focal = FOCALS[Math.round(fIdx)];
       return {
         idx: u > 0.5 ? j : i,
-        focal: u > 0.5 ? B.focal : A.focal,
-        hfov: mixv(A.hfov, B.hfov),
+        focal: focal,
+        focalIdx: fIdx,
+        hfov: hfovFor(focal),
         wedgeAz: mixv(A.wedgeAz, B.wedgeAz),
         marks: A.marks.map(function(ma, q){
           var mb = B.marks[q];
@@ -620,6 +651,56 @@
       return s;
     }
 
+    /* The two wheels, riding the plate's long edges as they ride the
+       screen's: focal length on the right, time of day on the left. The
+       engraved tape slides past a fixed pointer and the value at the
+       pointer is the value set, so the wheels are what the plate is
+       reading — roll the focal wheel and the wedge steps, roll TIME and
+       the sun moves round the ring. */
+    function wheel(x, cy, hh, dir, base, spacing, prog, label){
+      var bulge = 7, o = '';
+      o += '<path d="M' + x + ' ' + (cy - hh).toFixed(1) +
+           'Q' + (x + dir * bulge * 2) + ' ' + cy.toFixed(1) + ' ' + x + ' ' + (cy + hh).toFixed(1) +
+           '" fill="none" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="1"/>';
+      var n = Math.ceil(hh / spacing) + 1;
+      for (var i = -n; i <= n; i++){
+        var idx = Math.round(base) + i;
+        var y = cy + (idx - base) * spacing;
+        var t = (y - cy) / hh;
+        if (Math.abs(t) > 1 || Math.abs(t) > prog) continue;
+        var ax = x + dir * bulge * (1 - t * t);
+        var major = ((idx % 5) + 5) % 5 === 0;
+        var len = major ? 6 : 3.5;
+        var op = (0.55 * (1 - t * t) + 0.08) * (major ? 1 : 0.7);
+        o += '<line x1="' + ax.toFixed(1) + '" y1="' + y.toFixed(1) +
+             '" x2="' + (ax + dir * len).toFixed(1) + '" y2="' + y.toFixed(1) +
+             '" stroke="#FFFFFF" stroke-opacity="' + op.toFixed(2) + '" stroke-width="1"/>';
+      }
+      if (prog >= 1){
+        /* The pointer: fixed, brighter, the one line that never moves. */
+        var dx = x + dir * bulge;
+        o += '<line x1="' + (dx - dir * 2).toFixed(1) + '" y1="' + cy.toFixed(1) +
+             '" x2="' + (dx + dir * 11).toFixed(1) + '" y2="' + cy.toFixed(1) +
+             '" stroke="#FFFFFF" stroke-opacity=".85" stroke-width="1.2"/>';
+        var lx = x + dir * 24;
+        if (label && !hitsGuard([lx, cy], 22)){
+          o += '<text x="' + lx.toFixed(1) + '" y="' + (cy + 3).toFixed(1) +
+               '" text-anchor="' + (dir > 0 ? 'start' : 'end') + '">' + label + '</text>';
+        }
+      }
+      return o;
+    }
+
+    function drawWheels(w, h, cy, s, timeLabel, timeBase, prog){
+      var o = '';
+      if (prog > 0){
+        var hh = 0.30 * h;
+        o += wheel(14, cy, hh, 1, timeBase, 13, prog, timeLabel);
+        o += wheel(w - 14, cy, hh, -1, s ? s.focalIdx : 0, 15, prog, s ? s.focal + ' MM' : null);
+      }
+      if (o !== wheelsLast){ pwheels.innerHTML = o; wheelsLast = o; }
+    }
+
     /* The furniture sets itself: the scale bar rules left to right and
        takes its ticks, then the title block sets line by line. */
     function drawPlate(w, h, R, s, pT){
@@ -646,7 +727,7 @@
           var lon = Math.abs(LON).toFixed(1) + (LON >= 0 ? 'E' : 'W');
           o += '<text x="' + (w - 16) + '" y="' + (h - 25) + '" text-anchor="end">N-UP · ' + lat + ' ' + lon + '</text>';
           if (pT > 500){
-            o += '<text x="' + (w - 16) + '" y="' + (h - 13) + '" text-anchor="end">SETUP 0' + (s.idx + 1) + ' · ' + s.focal + ' MM</text>';
+            o += '<text x="' + (w - 16) + '" y="' + (h - 13) + '" text-anchor="end">SETUP 0' + (s.idx + 1) + '</text>';
           }
         }
       }
@@ -681,18 +762,19 @@
       var s = null;
       if (bootT > 0) s = drawStage(cx, cy, R, Math.max(0, tp - BOOT), bootT);
       else { if (stageLast !== ''){ pstage.innerHTML = ''; stageLast = ''; } }
-      drawPlate(W, H, R, s, tp - 2100);
-
-      /* The sun: the previewed day sweeps; now is where the sun really is. */
+      /* The sun: the previewed day sweeps under the TIME wheel; now is
+         where the sun really is. */
       var Ra = R + 8, show = false;
       if (tp > 1900 && model.samples.length && nowMs > model.rise && nowMs < model.set){
         var np = pt(cx, cy, sunPos(new Date(nowMs)).az, Ra);
         pnow.setAttribute('cx', np[0].toFixed(1)); pnow.setAttribute('cy', np[1].toFixed(1));
         show = true;
       }
+      var wheelMs = nowMs;
       if (!reduce && model.samples.length && tp > 1900){
         var u = ((tp - 1900) % 30000) / 30000;
         var pMs = model.rise + u * (model.set - model.rise);
+        wheelMs = pMs;
         var pp = pt(cx, cy, sunPos(new Date(pMs)).az, Ra);
         pprev.setAttribute('cx', pp[0].toFixed(1)); pprev.setAttribute('cy', pp[1].toFixed(1));
         pprev.setAttribute('visibility', 'visible');
@@ -700,6 +782,11 @@
         if (show && Math.abs(pMs - nowMs) < 12e5) show = false;
       } else pprev.setAttribute('visibility', 'hidden');
       pnow.setAttribute('visibility', show ? 'visible' : 'hidden');
+
+      /* One detent per ten minutes on the TIME wheel. */
+      drawWheels(W, H, cy, s, fmtHM.format(wheelMs), (wheelMs - model.day) / 6e5,
+                 clamp01((tp - 2400) / 500));
+      drawPlate(W, H, R, s, tp - 2600);
     }
 
     var running = false, raf = 0;
