@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariadne: Privacy</title>
+<meta name="description" content="What Ariadne and jakescottstudio.com handle, what leaves the device, and what never does.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Crect%20width='1024'%20height='1024'%20rx='180'%20fill='%23171717'/%3E%3Cg%20stroke='%23FFCC00'%20stroke-width='56'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M%20290%20140%20L%20208%20140%20A%2068%2068%200%200%200%20140%20208%20L%20140%20290'/%3E%3Cpath%20d='M%20734%20140%20L%20816%20140%20A%2068%2068%200%200%201%20884%20208%20L%20884%20290'/%3E%3Cpath%20d='M%20290%20884%20L%20208%20884%20A%2068%2068%200%200%201%20140%20816%20L%20140%20734'/%3E%3Cpath%20d='M%20734%20884%20L%20816%20884%20A%2068%2068%200%200%200%20884%20816%20L%20884%20734'/%3E%3C/g%3E%3Cg%20stroke='%23FFFFFF'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M%20285%20770%20L%20439.5%20382%20A%2078%2078%200%200%201%20584.5%20382%20L%20739%20770'%20stroke-width='68'/%3E%3Cpath%20d='M%20317%20508%20H%20707'%20stroke-width='56'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  /* The same system as the homepage: viewfinder black, one grid, mono for
+     labels, hairline rules. Single-theme by design. */
+  :root{
+    --ground:#171717;
+    --edge:rgba(255,255,255,0.10);
+    --ink:#F0EFEC;
+    --dim:rgba(240,239,236,0.58);
+    --faint:rgba(240,239,236,0.35);
+    --yellow:#FFCC00;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --labelcol:170px;
+    --colgap:2.5rem;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:1rem;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--faint)}
+  a:hover,a:focus-visible{border-bottom-color:var(--ink)}
+  a:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+
+  header{padding:3.5rem 0 0}
+  .homelink{display:inline-block;border-bottom:none}
+  .homelink svg{display:block;width:150px;height:auto}
+
+  main{padding:3rem 0 4rem}
+  section.row{
+    display:grid;
+    grid-template-columns:var(--labelcol) 1fr;
+    column-gap:var(--colgap);
+    padding:2.2rem 0;
+    border-top:1px solid var(--edge);
+  }
+  section.row.intro{border-top:none;padding-top:0}
+  .eyebrow{
+    font-family:var(--mono);font-size:.68rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--faint);
+    padding-top:.3rem;
+  }
+  section.row h2{
+    font-size:clamp(1.2rem,2.4vw,1.45rem);font-weight:600;line-height:1.4;
+    max-width:26ch;
+    margin-bottom:1rem;
+  }
+  section.row p{color:var(--dim);max-width:58ch}
+  section.row p+p{margin-top:.7rem}
+
+  footer{
+    margin-top:5rem;
+    border-top:1px solid var(--edge);
+    padding:2.2rem 0 3.5rem;
+  }
+  .colophon{
+    display:grid;
+    grid-template-columns:var(--labelcol) 1fr;
+    column-gap:var(--colgap);
+    font-family:var(--mono);
+    font-size:.72rem;line-height:2;
+    color:var(--faint);
+    letter-spacing:.02em;
+  }
+  footer a{color:var(--faint);border-bottom-color:var(--edge)}
+  footer a:hover,footer a:focus-visible{color:var(--dim);border-bottom-color:var(--faint)}
+
+  @media (max-width:600px){
+    section.row{grid-template-columns:1fr;row-gap:.7rem}
+    .eyebrow{padding-top:0}
+    .colophon{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="homelink" href="/" aria-label="Ariadne home">
+      <svg viewBox="0 0 76 20" role="img" aria-label="Ariadne">
+        <g stroke="#FFFFFF" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 2 16 L 4.956 6.481 A 2.14 2.14 0 0 1 9.044 6.481 L 12 16" stroke-width="1.5"/>
+          <path d="M 2.45 8.64 H 11.55" stroke-width="1.3"/>
+        </g>
+        <text x="14.5" y="16" fill="#FFFFFF"
+              font-family="ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace"
+              font-size="14" font-weight="600" letter-spacing="1.68"
+              textLength="60.25" lengthAdjust="spacing">RIADNE</text>
+      </svg>
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="row intro">
+      <div class="eyebrow"></div>
+      <div>
+        <h2>Privacy.</h2>
+        <p>Ariadne is built to keep your work on your device. This page states what the app
+        and this site handle, what leaves the phone, and what never does. It applies to the
+        Ariadne app for iPhone and to jakescottstudio.com.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">The short version</div>
+      <div>
+        <p>Ariadne has no accounts, no analytics, no advertising and no tracking, and uses no
+        third-party software kits. Nothing you shoot, scan or set up is uploaded. The app
+        makes one network request: naming the place where a capture was taken, described
+        below. This site sets no cookies.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Camera</div>
+      <div>
+        <p>The camera feeds the live viewfinder and AR tracking, processed on the device.
+        Nothing is recorded until you press the shutter. Captures are stored in the app's own
+        library, in your photo library if you choose, or both.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Location</div>
+      <div>
+        <p>With your permission, the app reads your location while it is open and uses it on
+        the device to compute the sun's position. A capture records the coordinates where it
+        was taken in its metadata, so the frame can state where it was shot. That metadata
+        stays on the device with the capture, and travels only when you share or export the
+        capture yourself.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Place names</div>
+      <div>
+        <p>After a capture, the app asks Apple's geocoding service to turn the capture's
+        coordinates into a short place name, such as a street, for the capture's label and
+        filename. This is the app's only network request. It is handled by Apple under
+        <a href="https://www.apple.com/legal/privacy/">Apple's privacy policy</a>; Ariadne
+        operates no servers of its own and receives nothing.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Photos</div>
+      <div>
+        <p>Saving captures uses add-only access to your photo library. If you grant read
+        access, it is used for one thing: checking whether captures the app saved are still
+        in your photo library, so the gallery's In Photos labels stay truthful. Ariadne never
+        reads, changes or deletes anything else in your library.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Scans</div>
+      <div>
+        <p>Actor scans are three-dimensional captures of real people. They are stored on the
+        device, are never uploaded, and are removed when you delete them or the app. You are
+        responsible for the consent of the people you scan.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Microphone</div>
+      <div>
+        <p>The app has no microphone access. Video captures are silent.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Deletion</div>
+      <div>
+        <p>Deleting a capture or scan in the app removes it from the device. Deleting the app
+        removes everything the app stores. Captures you saved to Photos remain in Photos,
+        under your control.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">This site</div>
+      <div>
+        <p>This site is static files. No cookies, no analytics, no trackers, and no
+        third-party scripts, fonts or embeds. The sun drawn on the homepage is computed in
+        your browser from your device's timezone; nothing is transmitted. Hosting is by
+        GitHub Pages, which may log standard request data such as IP addresses; see the
+        <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement">GitHub
+        Privacy Statement</a>.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Email</div>
+      <div>
+        <p>If you email the studio, the correspondence is kept for as long as it is needed to
+        answer you and for the studio's records, and is shared with no one.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Changes</div>
+      <div>
+        <p>This page changes only when the app or the site changes what it handles. Revised
+        20 August 2026.</p>
+        <p>Questions: <span id="enq">studio, at this domain</span></p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="colophon">
+      <div></div>
+      <div>
+        JAKE SCOTT STUDIO LIMITED<br>
+        Registered in England &amp; Wales · Company No. 11625103<br>
+        Registered office: 27 Mortimer Street, London, W1T 3BL, United Kingdom<br>
+        &copy; 2026 Jake Scott Studio Limited · <a href="/">Home</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* The enquiries address is assembled here so it never appears in the page
+     source; with scripts off, the text names it in words instead. */
+  (function(){
+    var el = document.getElementById('enq');
+    if (!el) return;
+    var d = location.hostname.replace(/^www\./, '');
+    if (!/jakescottstudio/.test(d)) d = ['jakescott', 'studio', '.com'].join('');
+    var addr = ['stu', 'dio'].join('') + String.fromCharCode(64) + d;
+    var a = document.createElement('a');
+    a.href = ['mai', 'lto:'].join('') + addr;
+    a.textContent = addr;
+    el.replaceChildren(a);
+  })();
+</script>
+
+</body>
+</html>
