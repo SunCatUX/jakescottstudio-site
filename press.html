@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariadne: Press</title>
+<meta name="description" content="Press material for Ariadne, the cinematography app for iPhone Pro: the release, the ten App Store plates at full size, the icon and the facts.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Crect%20width='1024'%20height='1024'%20rx='180'%20fill='%23171717'/%3E%3Cg%20stroke='%23FFCC00'%20stroke-width='56'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M%20290%20140%20L%20208%20140%20A%2068%2068%200%200%200%20140%20208%20L%20140%20290'/%3E%3Cpath%20d='M%20734%20140%20L%20816%20140%20A%2068%2068%200%200%201%20884%20208%20L%20884%20290'/%3E%3Cpath%20d='M%20290%20884%20L%20208%20884%20A%2068%2068%200%200%201%20140%20816%20L%20140%20734'/%3E%3Cpath%20d='M%20734%20884%20L%20816%20884%20A%2068%2068%200%200%200%20884%20816%20L%20884%20734'/%3E%3C/g%3E%3Cg%20stroke='%23FFFFFF'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M%20285%20770%20L%20439.5%20382%20A%2078%2078%200%200%201%20584.5%20382%20L%20739%20770'%20stroke-width='68'/%3E%3Cpath%20d='M%20317%20508%20H%20707'%20stroke-width='56'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  /* The same system as the homepage: viewfinder black, one grid, mono for
+     labels, hairline rules. Single-theme by design. */
+  :root{
+    --ground:#171717;
+    --edge:rgba(255,255,255,0.10);
+    --ink:#F0EFEC;
+    --dim:rgba(240,239,236,0.58);
+    --faint:rgba(240,239,236,0.35);
+    --yellow:#FFCC00;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --labelcol:170px;
+    --colgap:2.5rem;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:1rem;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--faint)}
+  a:hover,a:focus-visible{border-bottom-color:var(--ink)}
+  a:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+
+  header{padding:3.5rem 0 0}
+  .homelink{display:inline-block;border-bottom:none}
+  .homelink svg{display:block;width:150px;height:auto}
+
+  main{padding:3rem 0 4rem}
+  section.row{
+    display:grid;
+    grid-template-columns:var(--labelcol) 1fr;
+    column-gap:var(--colgap);
+    padding:2.2rem 0;
+    border-top:1px solid var(--edge);
+  }
+  section.row.intro{border-top:none;padding-top:0}
+  .eyebrow{
+    font-family:var(--mono);font-size:.68rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--faint);
+    padding-top:.3rem;
+  }
+  section.row h2{
+    font-size:clamp(1.2rem,2.4vw,1.45rem);font-weight:600;line-height:1.4;
+    max-width:26ch;
+    margin-bottom:1rem;
+  }
+  section.row p{color:var(--dim);max-width:58ch}
+  section.row p+p{margin-top:.7rem}
+
+  footer{
+    margin-top:5rem;
+    border-top:1px solid var(--edge);
+    padding:2.2rem 0 3.5rem;
+  }
+  .colophon{
+    display:grid;
+    grid-template-columns:var(--labelcol) 1fr;
+    column-gap:var(--colgap);
+    font-family:var(--mono);
+    font-size:.72rem;line-height:2;
+    color:var(--faint);
+    letter-spacing:.02em;
+  }
+  footer a{color:var(--faint);border-bottom-color:var(--edge)}
+  footer a:hover,footer a:focus-visible{color:var(--dim);border-bottom-color:var(--faint)}
+
+  @media (max-width:600px){
+    section.row{grid-template-columns:1fr;row-gap:.7rem}
+    .eyebrow{padding-top:0}
+    .colophon{grid-template-columns:1fr}
+  }
+
+  blockquote{border-left:2px solid var(--yellow);padding-left:1rem;margin:.9rem 0}
+  blockquote p{color:var(--ink)}
+  ul.glance{list-style:none;padding:0}
+  ul.glance li{color:var(--dim);padding:.35rem 0;border-top:1px solid rgba(255,255,255,0.05)}
+  figure{margin:0 0 1.8rem}
+  figure a{border-bottom:none}
+  figure img{display:block;width:100%;height:auto;border-radius:6px}
+  figcaption{font-size:.85rem;line-height:1.6;color:var(--faint);margin-top:.5rem;max-width:60ch}
+  table.notes{border-collapse:collapse;width:100%;font-size:.9rem}
+  table.notes th{text-align:left;font-family:var(--mono);font-weight:400;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);padding:.5rem 1rem .5rem 0;vertical-align:top;white-space:nowrap;border-top:1px solid rgba(255,255,255,0.05)}
+  table.notes td{color:var(--dim);padding:.5rem 0;border-top:1px solid rgba(255,255,255,0.05)}
+  .row p.lede{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="homelink" href="/" aria-label="Ariadne home">
+      <svg viewBox="0 0 76 20" role="img" aria-label="Ariadne">
+        <g stroke="#FFFFFF" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 2 16 L 4.956 6.481 A 2.14 2.14 0 0 1 9.044 6.481 L 12 16" stroke-width="1.5"/>
+          <path d="M 2.45 8.64 H 11.55" stroke-width="1.3"/>
+        </g>
+        <text x="14.5" y="16" fill="#FFFFFF"
+              font-family="ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace"
+              font-size="14" font-weight="600" letter-spacing="1.68"
+              textLength="60.25" lengthAdjust="spacing">RIADNE</text>
+      </svg>
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="row intro">
+      <div class="eyebrow"></div>
+      <div>
+        <h2>Press.</h2>
+        <p>The release, the ten App Store plates at full size, the icon and the facts. All of
+        it may be used with coverage of Ariadne; credit Jake Scott Studio. Review codes on
+        request from <span id="enq">studio, at this domain</span>.</p>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">The release</div>
+      <div>
+        <h2>Ariadne starts where the viewfinder apps stop</h2>
+        <p class="lede">A T-stop meter that holds to a third of a stop against an incident meter, false colour read off a film stock at its box speed, and ARRI look files imported with no round trip through the Reference Tool. Underneath sit the viewfinder at real sensor modes, the lens catalogue, the sun path and AR blocking. Built by a working cinematographer for the iPhone Pro; one purchase, no subscription.</p>
+        <p>LONDON, September 2026. Jake Scott Studio today released Ariadne, an iPhone Pro instrument that does three things a director&#x27;s viewfinder app does not: it meters the light to about a third of a stop, it reads false colour off a film stock, and it imports ARRI look files directly. Under those sits everything a scout expects, the viewfinder at real sensor modes, the lens catalogue, the sun path and AR blocking. It was built by a working cinematographer from what he needed on set and could not buy, and it is on the App Store now at £99.99 in the UK, with local pricing elsewhere as a single purchase.</p><p>The meter carries a number a cinematographer can check. A band beneath the picture states a live T-stop for the light in front of the lens, at the selected rating, shutter angle and frame rate; declare the ND in the matte box and every stop accounts for it. The reading is tested against an incident meter and holds to about a third of a stop, and each handset can calibrate it against its owner&#x27;s own meter. Holding the exposure turns the control wheel into an iris ring marked in real T-stops which re-exposes the sensor, so a location can be walked at one stop the way it is walked on film: a bright room reads over, a dark corner under.</p><p>A film camera has no monitoring path: no waveform, no false colour, no way to see what the negative is doing. Ariadne closes that. On a film body, touch and hold the picture and the frame paints by exposure in stops from mid grey, read against the selected stock at its box speed. Roll the exposure wheel until the bands sit where you expect across a face, and the band states the T-stop to set on the lens. The scale deliberately carries no over-exposure colour: the phone&#x27;s sensor clips several stops before a negative does, and a red band would report the phone&#x27;s limit as the shot&#x27;s. It does let you establish where your mid-tones and shadows are, and keep a mental picture of your lighting contrast as you move through a shoot.</p><p>The Look sheet imports ARRI Look Files in .alf4 and .aml directly, alongside .cube, so the looks a job is using can be seen on the location itself with no round trip through the ARRI Reference Tool. Each look is rendered in the colour science it was authored for and shown beside its response curve, with a stated figure for where 18% grey lands. Eight film stocks, Vision3 50D, 250D, 200T and 500T, Verita 200D, Vision 320T, Ektachrome 100D and Double-X, are built from the manufacturers&#x27; published data; negatives are shown as lab-corrected prints, reversal uncorrected under the light you stand in.</p><p>The viewfinder under all of this is the one the trade knows, held to a stricter standard. The operator selects a body from seven ARRI models, two Sony Venice models and three film formats, a sensor mode at its real recorded area and aspect ratio, and a lens from a searchable catalogue of real sets, spherical and anamorphic, and the picture is cropped to that field of view. Where a lens set carries image circle data, Ariadne states whether it covers the sensor; where there is no published figure, nothing is drawn.</p><p>Ariadne also stands the scene up. In AR, high-resolution, lighting-grade stand-ins are placed at true height on the real floor, seen through the selected lens and occluded by the real foreground, with backings dressed from the photo library, vehicles, interior cutaways, tables and seating. A production&#x27;s own actor can be scanned with LiDAR and placed as a double. The sun is scrubbed through the day a quarter of an hour at a time and drawn across the frame, and in AR it drives the direction, colour temperature and shadows of the scene lighting. A top-down Plan View plots the camera, its real field of view, every figure with its facing and the day&#x27;s solar arc; saved beside the photograph it adds a scale bar and lens to subject distances, to hand the blocking to other departments. All of it is built to be fast enough for a scout or a shooting day: just enough, quickly, rather than a full previsualisation tool.</p><p>The difference between an instrument built by a cinematographer and a camera tool adapted for one is clearest in what Ariadne declines to do. A declared filter does not darken the picture; it slides the marked scale, which is what a filter does to the stop you set. A digital body re-rated is a declaration, and the stop follows it. A film stock re-rated is a decision to expose the negative away from its box speed, so the stop moves and the picture, rendered at box speed, stays put; Ariadne says so rather than quietly moving the picture to match. A spot meter was built and then removed, because too much of a scene read as uncertain for the instrument to be relied on. Nothing drawn means no data, never a placeholder. Each handset can measure the true field of view of its own cameras and match them to one another against a grey card, so the framing and the stop belong to that phone rather than to a specification.</p><blockquote><p>&quot;Every figure Ariadne shows is one I would stand behind on a set,&quot; said Jake Scott, the cinematographer who built it. &quot;Where the phone cannot honestly give a reading, it says so and gives the reason. That was the rule from the first build.&quot;</p></blockquote>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">At a glance</div>
+      <div><ul class="glance"><li>Light meter that holds to about a third of a stop against an incident meter, with ND declaration and a recommended filter to reach the lens&#x27;s widest mark</li><li>Held exposure: the control wheel becomes an iris ring in T-stops that re-exposes the sensor</li><li>False colour in stops from mid grey, reading the selected film stock at box speed, with no over-exposure band by design</li><li>Apple Log pipeline with .cube, .alf4 and .aml import, each look shown with its response curve and where 18% grey lands</li><li>Eight film stock emulations from the manufacturers&#x27; published data</li><li>Per-handset calibration of camera field of view and metering against a grey card</li><li>Director&#x27;s viewfinder across seven ARRI bodies, two Sony Venice bodies and 35mm, 16mm and 65mm film, at real sensor modes and recorded areas</li><li>Searchable catalogue of real lens sets, spherical and anamorphic, with image circle coverage resolved against the selected sensor, and 1.4x and 2x adapters</li><li>AR blocking with lighting-grade stand-ins, props, vehicles and dressed backings, plus LiDAR scanning of a production&#x27;s own actor</li><li>True solar position driving both the on-screen sun path and the AR scene lighting</li><li>Plan View with field of view wedge, facings, solar arc, scale bar and subject distances</li><li>SLR Mode: the same colour pipeline as a stills and video camera</li><li>Stills and takes with framelines, hooks, compass and exposure burnt in, and a JSON sidecar</li></ul></div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Availability</div>
+      <div><p>Ariadne is available now on the App Store at £99.99 in the UK, with local pricing elsewhere, a single purchase with no subscription, no in-app purchases and no account. It requires an iPhone Pro, for the LiDAR sensor and the three rear cameras. The light meter, false colour, the Looks and the film stocks run on Apple Log and need an iPhone 15 Pro or later. The download is 3.3 GB. Nothing captured in the application leaves the phone.</p></div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Images</div>
+      <div>
+        <p>Ten App Store plates, 2868 x 1320. Each links to the PNG; the JPEG carries 300 dpi
+        for print. Clean captures without the plate text are available on request.</p>
+        <figure><a href="/assets/plates/L01.png"><img src="/assets/plates/L01.jpg" width="2868" height="1320" alt="The light meter. A live T-stop for the light in front of the lens, at the selected rating, shutter angle and frame rate, with any declared ND already in the figure." loading="lazy"></a><figcaption>The light meter. A live T-stop for the light in front of the lens, at the selected rating, shutter angle and frame rate, with any declared ND already in the figure. <a href="/assets/plates/L01.png">PNG</a> · <a href="/assets/plates/L01.jpg">JPEG, 300 dpi</a></figcaption></figure><figure><a href="/assets/plates/L02.png"><img src="/assets/plates/L02.jpg" width="2868" height="1320" alt="False colour on film. A Super 16 body and a Vision3 stock: the frame painted by exposure in stops from mid grey, read at box speed. There is no over-exposure band, by design." loading="lazy"></a><figcaption>False colour on film. A Super 16 body and a Vision3 stock: the frame painted by exposure in stops from mid grey, read at box speed. There is no over-exposure band, by design. <a href="/assets/plates/L02.png">PNG</a> · <a href="/assets/plates/L02.jpg">JPEG, 300 dpi</a></figcaption></figure><figure><a href="/assets/plates/L03.png"><img src="/assets/plates/L03.jpg" width="2868" height="1320" alt="The viewfinder. The scene through the selected body, sensor mode and lens, cropped to that field of view." loading="lazy"></a><figcaption>The viewfinder. The scene through the selected body, sensor mode and lens, cropped to that field of view. <a href="/assets/plates/L03.png">PNG</a> · <a href="/assets/plates/L03.jpg">JPEG, 300 dpi</a></figcaption></figure><figure><a href="/assets/plates/L04.png"><img src="/assets/plates/L04.jpg" width="2868" height="1320" alt="Held exposure. Metering stops and the wheel becomes an iris ring in T-stops that re-exposes the sensor." loading="lazy"></a><figcaption>Held exposure. Metering stops and the wheel becomes an iris ring in T-stops that re-exposes the sensor. <a href="/assets/plates/L04.png">PNG</a> · <a href="/assets/plates/L04.jpg">JPEG, 300 dpi</a></figcaption></figure><figure><a href="/assets/plates/L05.png"><img src="/assets/plates/L05.jpg" width="2868" height="1320" alt="AR blocking on location. Stand-ins at true height on the real floor, seen through the selected lens and occluded by the real foreground." loading="lazy"></a><figcaption>AR blocking on location. Stand-ins at true height on the real floor, seen through the selected lens and occluded by the real foreground. <a href="/assets/plates/L05.png">PNG</a> · <a href="/assets/plates/L05.jpg">JPEG, 300 dpi</a></figcaption></figure><figure><a href="/assets/plates/L06.png"><img src="/assets/plates/L06.jpg" width="2868" height="1320" alt="The Look sheet. An ARRI look file rendered in its own colour science, beside its response curve." loading="lazy"></a><figcaption>The Look sheet. An ARRI look file rendered in its own colour science, beside its response curve. <a href="/assets/plates/L06.png">PNG</a> · <a href="/assets/plates/L06.jpg">JPEG, 300 dpi</a></figcaption></figure><figure><a href="/assets/plates/L07.png"><img src="/assets/plates/L07.jpg" width="2868" height="1320" alt="Plan View. The camera, its field of view as a wedge, every figure with its facing, the day&#x27;s solar arc, a scale bar and lens to subject distances." loading="lazy"></a><figcaption>Plan View. The camera, its field of view as a wedge, every figure with its facing, the day&#x27;s solar arc, a scale bar and lens to subject distances. <a href="/assets/plates/L07.png">PNG</a> · <a href="/assets/plates/L07.jpg">JPEG, 300 dpi</a></figcaption></figure><figure><a href="/assets/plates/L08.png"><img src="/assets/plates/L08.jpg" width="2868" height="1320" alt="Sun and time of day. True solar position for where you stand, scrubbed through the day and drawn across the frame." loading="lazy"></a><figcaption>Sun and time of day. True solar position for where you stand, scrubbed through the day and drawn across the frame. <a href="/assets/plates/L08.png">PNG</a> · <a href="/assets/plates/L08.jpg">JPEG, 300 dpi</a></figcaption></figure><figure><a href="/assets/plates/L09.png"><img src="/assets/plates/L09.jpg" width="2868" height="1320" alt="SLR Mode. The same colour pipeline as a stills and video camera." loading="lazy"></a><figcaption>SLR Mode. The same colour pipeline as a stills and video camera. <a href="/assets/plates/L09.png">PNG</a> · <a href="/assets/plates/L09.jpg">JPEG, 300 dpi</a></figcaption></figure><figure><a href="/assets/plates/L10.png"><img src="/assets/plates/L10.jpg" width="2868" height="1320" alt="A saved capture. Framelines, hooks, compass and exposure burnt into the frame, with a JSON sidecar." loading="lazy"></a><figcaption>A saved capture. Framelines, hooks, compass and exposure burnt into the frame, with a JSON sidecar. <a href="/assets/plates/L10.png">PNG</a> · <a href="/assets/plates/L10.jpg">JPEG, 300 dpi</a></figcaption></figure>
+        <figure><a href="/assets/icon/ariadne-1024.png"><img src="/assets/icon/ariadne-1024.png" width="1024" height="1024" alt="The Ariadne app icon" style="width:160px;border-radius:28px" loading="lazy"></a>
+        <figcaption>The icon, 1024 x 1024. <a href="/assets/icon/ariadne-1024.png">PNG</a></figcaption></figure>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">Facts</div>
+      <div><table class="notes"><tr><th>App</th><td>Ariadne—Cinematography Tools</td></tr><tr><th>App Store</th><td>https://apps.apple.com/app/id6803721990</td></tr><tr><th>Developer</th><td>Jake Scott Studio Limited, 27 Mortimer Street, London W1T 3BL</td></tr><tr><th>Platform</th><td>iPhone Pro, iOS 27 or later</td></tr><tr><th>Apple Log</th><td>needed by the light meter, false colour, the Looks and the film stocks (iPhone 15 Pro or later)</td></tr><tr><th>LiDAR</th><td>needed by AR blocking and actor scanning (every iPhone Pro)</td></tr><tr><th>Price</th><td>£99.99 in the UK, with local pricing elsewhere, one purchase, no subscription, no in-app purchases</td></tr><tr><th>Size</th><td>3.3 GB</td></tr><tr><th>Category</th><td>Photo &amp; Video</td></tr><tr><th>Release date</th><td>September 2026</td></tr><tr><th>Web</th><td>jakescottstudio.com</td></tr><tr><th>Support</th><td>jakescottstudio.com/support</td></tr><tr><th>Privacy</th><td>jakescottstudio.com/privacy</td></tr><tr><th>Images</th><td>Jake Scott Studio, free for editorial use with coverage of Ariadne</td></tr></table></div>
+    </section>
+
+    <section class="row">
+      <div class="eyebrow">About the studio</div>
+      <div><p>Jake Scott Studio Limited is the practice of Jake Scott, a working cinematographer based in London. Ariadne is its first release.</p></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="colophon">
+      <div></div>
+      <div>
+        JAKE SCOTT STUDIO LIMITED<br>
+        Registered in England &amp; Wales · Company No. 11625103<br>
+        Registered office: 27 Mortimer Street, London, W1T 3BL, United Kingdom<br>
+        &copy; 2026 Jake Scott Studio Limited · <a href="/">Home</a> · <a href="/privacy">Privacy</a> · <a href="/support">Support</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* The enquiries address is assembled here so it never appears in the page
+     source; with scripts off, the text names it in words instead. */
+  (function(){
+    var el = document.getElementById('enq');
+    if (!el) return;
+    var d = location.hostname.replace(/^www\./, '');
+    if (!/jakescottstudio/.test(d)) d = ['jakescott', 'studio', '.com'].join('');
+    var addr = ['stu', 'dio'].join('') + String.fromCharCode(64) + d;
+    var a = document.createElement('a');
+    a.href = ['mai', 'lto:'].join('') + addr;
+    a.textContent = addr;
+    el.replaceChildren(a);
+  })();
+</script>
+
+</body>
+</html>
