@@ -88,11 +88,18 @@
   section.row p+p{margin-top:.7rem}
   .store .eyebrow{color:var(--yellow)}
   section.row h2{font-family:var(--sans);font-size:1rem;font-weight:600;color:var(--ink);margin-bottom:.35rem}
-  /* The plates: three of the App Store plates at the column's full width, each a link to the
-     press page, ruled apart by the same hairline as the rows. */
+  /* The plates: the ten App Store plates at the column's full width, in their store order,
+     each a link to the press page, ruled off by the same hairline as the rows. */
   .plates{border-top:1px solid var(--edge);padding:2.2rem 0 .6rem}
   .plates a{display:block;border-bottom:none;margin-bottom:1.6rem}
   .plates img{display:block;width:100%;height:auto;border-radius:6px}
+  /* The studio's work as a pair: two frames of one shape, one black and one paper, which is
+     the range in a glance. Mono tags beneath, as on a catalogue page. */
+  .work{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin:1.4rem 0 .5rem}
+  .work a{display:block;border-bottom:none}
+  .work img{display:block;width:100%;height:auto;aspect-ratio:2868/1320;object-fit:cover;border-radius:6px}
+  .work .tag{margin-top:.55rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);line-height:1.7}
+  .work .tag b{font-weight:600;color:var(--dim)}
 
   .fineprint p{font-size:.85rem;line-height:1.7;color:var(--faint);max-width:60ch}
   .fineprint p+p{margin-top:.7rem}
@@ -118,6 +125,7 @@
     section.row{grid-template-columns:1fr;row-gap:.7rem}
     .eyebrow{padding-top:0}
     .colophon{grid-template-columns:1fr}
+    .work{grid-template-columns:1fr}
   }
 </style>
 </head>
@@ -169,7 +177,14 @@
     <div class="plates" aria-label="App Store plates">
       <a href="/press"><img src="/assets/plates/L01-1600.jpg" width="1600" height="736" alt="The light meter: a T-stop for the light in front of the lens, at the selected rating, shutter angle and frame rate."></a>
       <a href="/press"><img src="/assets/plates/L02-1600.jpg" width="1600" height="736" alt="False colour on film: the frame painted by exposure in stops from mid grey, read off the selected stock at box speed." loading="lazy"></a>
+      <a href="/press"><img src="/assets/plates/L03-1600.jpg" width="1600" height="736" alt="The viewfinder: the scene through the selected body, sensor mode and lens, cropped to that field of view." loading="lazy"></a>
+      <a href="/press"><img src="/assets/plates/L04-1600.jpg" width="1600" height="736" alt="Held exposure: metering stops and the wheel becomes an iris ring in T-stops that re-exposes the sensor." loading="lazy"></a>
+      <a href="/press"><img src="/assets/plates/L05-1600.jpg" width="1600" height="736" alt="AR blocking on location: stand-ins at true height on the real floor, occluded by the real foreground." loading="lazy"></a>
       <a href="/press"><img src="/assets/plates/L06-1600.jpg" width="1600" height="736" alt="The Look sheet: a camera look file rendered in its own colour science, beside its response curve." loading="lazy"></a>
+      <a href="/press"><img src="/assets/plates/L07-1600.jpg" width="1600" height="736" alt="Plan View: the camera, its field of view as a wedge, every figure with its facing, the solar arc, a scale bar and distances." loading="lazy"></a>
+      <a href="/press"><img src="/assets/plates/L08-1600.jpg" width="1600" height="736" alt="Sun and time of day: true solar position for where you stand, scrubbed through the day and drawn across the frame." loading="lazy"></a>
+      <a href="/press"><img src="/assets/plates/L09-1600.jpg" width="1600" height="736" alt="SLR Mode: the same colour pipeline as a stills and video camera." loading="lazy"></a>
+      <a href="/press"><img src="/assets/plates/L10-1600.jpg" width="1600" height="736" alt="A saved capture: framelines, hooks, compass and exposure burnt into the frame." loading="lazy"></a>
     </div>
 
     <section class="row">
@@ -272,9 +287,18 @@
       <div class="eyebrow">Studio</div>
       <div>
         <p>Ariadne is built by Jake Scott Studio, the UX studio from cinematographer Jake
-        Scott. Also from the studio: <a href="https://kites.studio">Kites</a>, for the scent
-        and cast-glass work of artist and director Emilija Povilanskaite. Selected work at
-        <a href="https://jakescottdop.com">jakescottdop.com</a>.</p>
+        Scott. Its work runs from instruments to atmospheres.</p>
+        <div class="work">
+          <div>
+            <a href="/press"><img src="/assets/plates/L03-1600.jpg" width="1600" height="736" alt="Ariadne: the viewfinder plate, a face seen through the selected lens" loading="lazy"></a>
+            <div class="tag"><b>Ariadne</b><br>Cinematography tools for iPhone Pro</div>
+          </div>
+          <div>
+            <a href="https://kites.studio"><img src="/assets/studio/kites.jpg" width="1440" height="663" alt="kites.studio: a cast-glass fragrance bottle on a pale, papered ground" loading="lazy"></a>
+            <div class="tag"><b>Kites</b><br>Scent and cast glass, for artist and director Emilija Povilanskaite</div>
+          </div>
+        </div>
+        <p>Selected cinematography at <a href="https://jakescottdop.com">jakescottdop.com</a>.</p>
       </div>
     </section>
   </div>
